@@ -40,8 +40,6 @@ class Product extends DataController
         try {
             $result = array();
             $limit = $queryFilter->isLimit() ? $queryFilter->getLimit() : 100;
-
-            $fetchChildren = ($queryFilter->isFilter(QueryFilter::FILTER_FETCH_CHILDREN) && $queryFilter->isFilter(QueryFilter::FILTER_PARENT_ID));
             $mapper = Mmc::getMapper('Product');
 
             $products = $mapper->findAll($limit);
@@ -79,7 +77,6 @@ class Product extends DataController
 
         $data['detailId'] = $data['id'];
         $data['id'] = IdConcatenator::link(array($data['id'], $data['articleId']));
-        $article = $data['article'];
         $data['isMasterProduct'] = (isset($data['configuratorSetId']) && (int)$data['configuratorSetId'] > 0 && (int) $data['kind'] == 0);
 
         unset($data['article']);
@@ -103,6 +100,9 @@ class Product extends DataController
         // Stock
         $product->setConsiderStock(true)
             ->setPermitNegativeStock((bool) !$data['lastStock']);
+
+        // Baseprice
+        $product->setConsiderBasePrice(strlen($data['referenceUnit']) > 0);
 
         $product->setStockLevel($stockLevel);
 

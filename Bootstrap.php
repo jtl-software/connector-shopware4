@@ -12,7 +12,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
 
     public function getLabel()
     {
-        return 'JTL Shopware Connector';
+        return 'JTL Shopware 4 Connector';
     }
  
     public function getVersion()
@@ -34,10 +34,10 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
  
     public function install()
     {
-        if (!$this->assertVersionGreaterThen('4.2.3')) {
+        if (!$this->assertVersionGreaterThen('4.2.3') || !$this->assertVersionLesserThen('5.0.0')) {
             return array(
                 'success' => false,
-                'message' => 'Das Plugin benötigt mindestens die Shopware Version 4.2.3'
+                'message' => 'Das Plugin benötigt mindestens die Shopware Version 4.2.3 und muss kleiner als 5.0.0 sein.'
             );
         }
 
@@ -121,6 +121,17 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         }
 
         return true;
+    }
+
+    private function assertVersionLesserThen($requiredVersion)
+    {
+        $version = $this->Application()->Config()->version;
+
+        if ($version === '___VERSION___') {
+            return true;
+        }
+
+        return version_compare($version, $requiredVersion, '<');
     }
 
     private function createMappingTables()

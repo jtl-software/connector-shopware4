@@ -1,7 +1,7 @@
 {
-    "name": "jtl/connector/shopware",
+    "name": "jtl/connector/shopware4",
     "type": "APP",
-    "description": "Shopware Connector based on jtl/connector",
+    "description": "Shopware 4 Connector based on jtl/connector",
     "keywords": ["jtl", "Shopware", "Connector"],
     "homepage": "http://www.jtl-software.de",
     "license": "GPL",
