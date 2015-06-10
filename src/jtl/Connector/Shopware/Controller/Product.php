@@ -101,10 +101,10 @@ class Product extends DataController
         $product->setConsiderStock(true)
             ->setPermitNegativeStock((bool) !$data['lastStock']);
 
+        $product->setStockLevel($stockLevel);
+
         // Baseprice
         $product->setConsiderBasePrice(strlen($data['referenceUnit']) > 0);
-
-        $product->setStockLevel($stockLevel);
 
         // ProductI18n
         $this->addPos($product, 'addI18n', 'ProductI18n', $data);
@@ -391,6 +391,18 @@ class Product extends DataController
 
                     $product->addSpecific($productSpecific);
                 }
+            }
+        }
+
+        // CrossSelling
+        if (!$isDetail) {
+            foreach ($data['related'] as $i => $related) {
+                $productCrossSelling = Mmc::getModel('ProductCrossSelling');
+                $productCrossSelling->setId(new Identity($i))
+                    ->setCrossProductId(new Identity(IdConcatenator::link(array($related['mainDetailId'], $related['id']))))
+                    ->setProductId($product->getId());
+
+                $product->addCrossSelling($productCrossSelling);
             }
         }
 

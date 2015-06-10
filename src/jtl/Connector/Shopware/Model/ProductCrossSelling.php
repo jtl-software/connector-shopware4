@@ -6,17 +6,17 @@
 
 namespace jtl\Connector\Shopware\Model;
 
-use \jtl\Connector\Model\CrossSelling as CrossSellingModel;
+use \jtl\Connector\Model\ProductCrossSelling as ProductCrossSellingModel;
 
 /**
- * CrossSelling Model
+ * ProductCrossSelling Model
  * @access public
  */
-class CrossSelling extends CrossSellingModel
+class ProductCrossSelling extends ProductCrossSellingModel
 {
     protected $fields = array(
         'id' => '',
-        'crossSellingProductId' => '',
+        'crossProductId' => '',
         'crossSellingGroupId' => '',
         'productId' => ''
     );

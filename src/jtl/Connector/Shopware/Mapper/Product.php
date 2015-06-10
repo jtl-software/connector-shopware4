@@ -211,7 +211,7 @@ class Product extends DataMapper
                 $this->prepareDetailAssociatedData($product, $productSW, $detailSW, true);
                 $this->prepareAttributeAssociatedData($product, $productSW, $detailSW);
                 $this->preparePriceAssociatedData($product, $productSW, $detailSW);
-                $this->prepareUnitAssociatedData($product, $productSW, $detailSW);
+                $this->prepareUnitAssociatedData($product, $detailSW);
                 $this->prepareMeasurementUnitAssociatedData($product, $detailSW);
 
                 // First Child
@@ -224,7 +224,7 @@ class Product extends DataMapper
                 $this->Manager()->persist($productSW);
                 $this->Manager()->flush();
                 
-                $this->prepareDetailVariationAssociatedData($product, $productSW, $detailSW);
+                $this->prepareDetailVariationAssociatedData($product, $detailSW);
                 
             } else {
                 $this->prepareProductAssociatedData($product, $productSW, $detailSW);
@@ -240,8 +240,9 @@ class Product extends DataMapper
                     $this->prepareSpecificAssociatedData($product, $productSW, $detailSW);
                     $this->prepareAttributeAssociatedData($product, $productSW, $detailSW);
                     $this->preparePriceAssociatedData($product, $productSW, $detailSW);
-                    $this->prepareUnitAssociatedData($product, $productSW, $detailSW);
+                    $this->prepareUnitAssociatedData($product, $detailSW);
                     $this->prepareMeasurementUnitAssociatedData($product, $detailSW);
+                    $this->prepareCrossSellingAssociatedData($product, $productSW);
 
                     if (!($detailSW->getId() > 0)) {
                         $kind = $detailSW->getKind();
@@ -549,7 +550,7 @@ class Product extends DataMapper
             ->setArticle($productSW);
     }
 
-    protected function prepareDetailVariationAssociatedData(ProductModel &$product, ArticleSW &$productSW, DetailSW &$detailSW)
+    protected function prepareDetailVariationAssociatedData(ProductModel &$product, DetailSW &$detailSW)
     {
         $optionMapper = Mmc::getMapper('ConfiguratorOption');
         foreach ($product->getVariations() as $variation) {
@@ -844,7 +845,7 @@ class Product extends DataMapper
         }
     }
 
-    protected function prepareUnitAssociatedData(ProductModel $product, ArticleSW $productSW, DetailSW &$detailSW = null)
+    protected function prepareUnitAssociatedData(ProductModel $product, DetailSW &$detailSW = null)
     {
         if ($product->getUnitId()->getHost() > 0) {
             $unitMapper = Mmc::getMapper('Unit');
@@ -868,6 +869,19 @@ class Product extends DataMapper
                 $detailSW->setUnit($measurementUnitSW);
             }
         }
+    }
+
+    private function prepareCrossSellingAssociatedData(ProductModel $product, ArticleSW $productSW)
+    {
+        $crossSellings = new ArrayCollection();
+        foreach ($product->getCrossSellings() as $crossSelling) {
+            $productCrossSW = $this->find($crossSelling->getCrossProductId()->getEndpoint());
+            if ($productCrossSW) {
+                $crossSellings->add($productCrossSW);
+            }
+        }
+
+        $productSW->setRelated($crossSellings);
     }
 
     protected function deleteTranslationData(ArticleSW $productSW)
