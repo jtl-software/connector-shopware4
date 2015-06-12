@@ -53,10 +53,9 @@ class CustomerOrder extends DataController
                     $order->map(true, DataConverter::toObject($orderSW, true));
 
                     // PaymentModuleCode
-                    $paymentModuleCode = PaymentUtil::map(null, $orderSW['payment']['name']);
-                    if ($paymentModuleCode !== null) {
-                        $order->setPaymentModuleCode($paymentModuleCode);
-                    }
+                    $code = PaymentUtil::map(null, $orderSW['payment']['name']);
+                    $paymentModuleCode = ($code !== null) ? $code : $orderSW['payment']['name'];
+                    $order->setPaymentModuleCode($paymentModuleCode);
 
                     // CustomerOrderStatus
                     $customerOrderStatus = StatusUtil::map(null, $orderSW['status']);
