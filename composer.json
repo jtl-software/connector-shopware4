@@ -4,7 +4,7 @@
     "description": "Shopware 4 Connector based on jtl/connector",
     "keywords": ["jtl", "Shopware", "Connector"],
     "homepage": "http://www.jtl-software.de",
-    "license": "GPL",
+    "license": "LGPL",
     "authors": [
         {
             "name": "JTL-Software GmbH",

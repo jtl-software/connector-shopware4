@@ -394,18 +394,6 @@ class Product extends DataController
             }
         }
 
-        // CrossSelling
-        if (!$isDetail) {
-            foreach ($data['related'] as $i => $related) {
-                $productCrossSelling = Mmc::getModel('ProductCrossSelling');
-                $productCrossSelling->setId(new Identity($i))
-                    ->setCrossProductId(new Identity(IdConcatenator::link(array($related['mainDetailId'], $related['id']))))
-                    ->setProductId($product->getId());
-
-                $product->addCrossSelling($productCrossSelling);
-            }
-        }
-
         //return $product->getPublic();
         return $product;
     }

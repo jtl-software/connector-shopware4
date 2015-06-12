@@ -242,7 +242,6 @@ class Product extends DataMapper
                     $this->preparePriceAssociatedData($product, $productSW, $detailSW);
                     $this->prepareUnitAssociatedData($product, $detailSW);
                     $this->prepareMeasurementUnitAssociatedData($product, $detailSW);
-                    $this->prepareCrossSellingAssociatedData($product, $productSW);
 
                     if (!($detailSW->getId() > 0)) {
                         $kind = $detailSW->getKind();
@@ -869,19 +868,6 @@ class Product extends DataMapper
                 $detailSW->setUnit($measurementUnitSW);
             }
         }
-    }
-
-    private function prepareCrossSellingAssociatedData(ProductModel $product, ArticleSW $productSW)
-    {
-        $crossSellings = new ArrayCollection();
-        foreach ($product->getCrossSellings() as $crossSelling) {
-            $productCrossSW = $this->find($crossSelling->getCrossProductId()->getEndpoint());
-            if ($productCrossSW) {
-                $crossSellings->add($productCrossSW);
-            }
-        }
-
-        $productSW->setRelated($crossSellings);
     }
 
     protected function deleteTranslationData(ArticleSW $productSW)

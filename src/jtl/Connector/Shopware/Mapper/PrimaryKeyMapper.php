@@ -79,7 +79,7 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                     $endpointId = Shopware()->Db()->fetchOne(
                         'SELECT image_id FROM ' . $dbInfo['table'] . ' WHERE host_id = ?',
                         array($hostId)
-                    );  
+                    );
                 }
                 break;
             default:
@@ -204,7 +204,8 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
              TRUNCATE TABLE jtl_connector_link_order;
              TRUNCATE TABLE jtl_connector_link_product;
              TRUNCATE TABLE jtl_connector_link_specific;
-             TRUNCATE TABLE jtl_connector_link_payment;'
+             TRUNCATE TABLE jtl_connector_link_payment;
+             TRUNCATE TABLE jtl_connector_link_crossselling;'
         );
 
         return $statement ? true : false;
@@ -267,6 +268,11 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                 return array(
                     'table' => 'jtl_connector_link_payment',
                     'pk' => 'payment_id'
+                );
+            case IdentityLinker::TYPE_CROSSSELLING:
+                return array(
+                    'table' => 'jtl_connector_link_crossselling',
+                    'pk' => 'product_id'
                 );
         }
     }

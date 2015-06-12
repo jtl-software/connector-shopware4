@@ -11,10 +11,6 @@ use \jtl\Connector\Core\Logger\Logger;
 use \Shopware\Components\Api\Exception as ApiException;
 use \Shopware\Models\Article\Configurator\Option as ConfiguratorOptionModel;
 use \jtl\Connector\ModelContainer\ProductContainer;
-use \jtl\Connector\Shopware\Model\ProductVariation;
-use \jtl\Connector\Core\Utilities\DataConverter;
-use \jtl\Connector\Shopware\Model\DataModel;
-use \jtl\Connector\Core\Utilities\Language as LanguageUtil;
 
 class ConfiguratorOption extends DataMapper
 {
