@@ -13,9 +13,9 @@ use jtl\Connector\Shopware\Utilities\Locale as LocaleUtil;
 use jtl\Connector\Shopware\Utilities\Mmc;
 use jtl\Connector\Shopware\Utilities\Payment as PaymentUtil;
 use jtl\Connector\Shopware\Utilities\PaymentStatus as PaymentStatusUtil;
+use jtl\Connector\Shopware\Utilities\Salutation;
 use jtl\Connector\Shopware\Utilities\Status as StatusUtil;
 use jtl\Connector\Core\Logger\Logger;
-use jtl\Connector\Core\Model\Model;
 use jtl\Connector\Core\Model\QueryFilter;
 use jtl\Connector\Core\Rpc\Error;
 use jtl\Connector\Core\Utilities\DataConverter;
@@ -104,6 +104,13 @@ class CustomerOrder extends DataController
 
                     $this->addPos($order, 'setBillingAddress', 'CustomerOrderBillingAddress', $orderSW['billing']);
                     $this->addPos($order, 'setShippingAddress', 'CustomerOrderShippingAddress', $orderSW['shipping']);
+
+                    // Street and Salutation
+                    $order->getBillingAddress()->setStreet(sprintf('%s %s', $orderSW['billing']['street'], $orderSW['billing']['streetNumber']))
+                        ->setSalutation(Salutation::toConnector($orderSW['billing']['salutation']));
+
+                    $order->getShippingAddress()->setStreet(sprintf('%s %s', $orderSW['shipping']['street'], $orderSW['shipping']['streetNumber']))
+                        ->setSalutation(Salutation::toConnector($orderSW['shipping']['salutation']));
 
                     // Adding shipping item
                     if ($orderSW['invoiceShippingNet'] > 0) {

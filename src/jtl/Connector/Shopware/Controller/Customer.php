@@ -50,7 +50,8 @@ class Customer extends DataController
 
                     // Salutation
                     $customer->setSalutation(Salutation::toConnector($customer->getSalutation()))
-                        ->setCountryIso($country->getIso());
+                        ->setCountryIso($country->getIso())
+                        ->setStreet(sprintf('%s %s', $customerSW['billing']['street'], $customerSW['billing']['streetNumber']));
 
                     // Attributes
                     if (isset($customerSW['billing']['attribute']) && is_array($customerSW['billing']['attribute'])) {
