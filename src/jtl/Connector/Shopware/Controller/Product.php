@@ -18,6 +18,7 @@ use \jtl\Connector\Core\Exception\ControllerException;
 use \jtl\Connector\Shopware\Utilities\CustomerGroup as CustomerGroupUtil;
 use \jtl\Connector\Model\Identity;
 use \jtl\Connector\Core\Utilities\Language as LanguageUtil;
+use \jtl\Connector\Shopware\Utilities\Shop as ShopUtil;
 use \jtl\Connector\Shopware\Utilities\IdConcatenator;
 
 /**
@@ -40,8 +41,6 @@ class Product extends DataController
         try {
             $result = array();
             $limit = $queryFilter->isLimit() ? $queryFilter->getLimit() : 100;
-
-            $fetchChildren = ($queryFilter->isFilter(QueryFilter::FILTER_FETCH_CHILDREN) && $queryFilter->isFilter(QueryFilter::FILTER_PARENT_ID));
             $mapper = Mmc::getMapper('Product');
 
             $products = $mapper->findAll($limit);
@@ -79,7 +78,6 @@ class Product extends DataController
 
         $data['detailId'] = $data['id'];
         $data['id'] = IdConcatenator::link(array($data['id'], $data['articleId']));
-        $article = $data['article'];
         $data['isMasterProduct'] = (isset($data['configuratorSetId']) && (int)$data['configuratorSetId'] > 0 && (int) $data['kind'] == 0);
 
         unset($data['article']);
@@ -105,6 +103,9 @@ class Product extends DataController
             ->setPermitNegativeStock((bool) !$data['lastStock']);
 
         $product->setStockLevel($stockLevel);
+
+        // Baseprice
+        $product->setConsiderBasePrice(strlen($data['referenceUnit']) > 0);
 
         // ProductI18n
         $this->addPos($product, 'addI18n', 'ProductI18n', $data);
@@ -233,12 +234,12 @@ class Product extends DataController
                     false
                 );
 
-                $specialPrice = Mmc::getModel('SpecialPrice');
-                $specialPrice->setCustomerGroupId(new Identity($discount['customerGroupId']))
+                $productSpecialPriceItem = Mmc::getModel('ProductSpecialPriceItem');
+                $productSpecialPriceItem->setCustomerGroupId(new Identity($discount['customerGroupId']))
                     ->setProductSpecialPriceId(new Identity($discount['groupId']))
                     ->setPriceNet($discountPriceNet);
 
-                $productSpecialPrice->addSpecialPrice($specialPrice);
+                $productSpecialPrice->addItem($productSpecialPriceItem);
                 $exists = true;
             }
 
@@ -394,7 +395,25 @@ class Product extends DataController
             }
         }
 
-        //return $product->getPublic();
+        // Downloads
+        if (!$isDetail) {
+            $proto = ShopUtil::getProtocol();
+            foreach ($data['downloads'] as $downloadSW) {
+                $productFileDownload = Mmc::getModel('ProductFileDownload');
+                $productFileDownload->map(true, DataConverter::toObject($downloadSW));
+                $productFileDownload->setProductId($product->getId())
+                    ->setPath(sprintf('%s://%s%s/%s', $proto, Shopware()->Shop()->getHost(), Shopware()->Shop()->getBaseUrl(), $downloadSW['file']));
+
+                $productFileDownloadI18n = Mmc::getModel('ProductFileDownloadI18n');
+                $productFileDownloadI18n->setLanguageISO(LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale()))
+                    ->setName($downloadSW['name']);
+
+                $productFileDownload->addI18n($productFileDownloadI18n);
+
+                $product->addFileDownload($productFileDownload);
+            }
+        }
+
         return $product;
     }
 }

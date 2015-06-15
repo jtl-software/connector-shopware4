@@ -8,6 +8,7 @@ namespace jtl\Connector\Shopware\Controller;
 
 use jtl\Connector\Core\Model\QueryFilter;
 use jtl\Connector\Core\Rpc\Error;
+use jtl\Connector\Core\Utilities\DataConverter;
 use jtl\Connector\Result\Action;
 use jtl\Connector\Shopware\Utilities\Mmc;
 
@@ -33,7 +34,10 @@ class Payment extends DataController
             $mapper = Mmc::getMapper('Payment');
             $payments = $mapper->findAll($limit);
 
-            foreach ($payments as $payment) {
+            foreach ($payments as $paymentSW) {
+                $payment = Mmc::getModel('Payment');
+                $payment->map(true, DataConverter::toObject($paymentSW, true));
+
                 $result[] = $payment;
             }
 
