@@ -394,6 +394,11 @@ class Product extends DataController
             }
         }
 
+        // Downloads
+        foreach ($data['downloads'] as $downloadSW) {
+
+        }
+
         //return $product->getPublic();
         return $product;
     }
