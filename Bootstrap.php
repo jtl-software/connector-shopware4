@@ -186,6 +186,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_unit_i18n`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_unit`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_payment`');
+        Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_crossselling`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_category`');
     }
 
