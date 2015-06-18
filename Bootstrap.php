@@ -45,7 +45,12 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
     {
         require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
-        $json = new ConfigJson(Path::combine(__DIR__, 'config', 'config.json'));
+        $configFile = Path::combine(__DIR__, 'config', 'config.json');
+        if (!file_exists($configFile)) {
+            file_put_contents($configFile, '{}');
+        }
+
+        $json = new ConfigJson($configFile);
         $this->config = new Config(array($json));
 
         if (!$this->assertVersionGreaterThen('4.2.3') || !$this->assertVersionLesserThen('5.0.0')) {
