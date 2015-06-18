@@ -1,6 +1,14 @@
 <?php
+use \jtl\Connector\Shopware\Utilities\Mmc;
+use \jtl\Connector\Core\System\Check as CheckUtil;
+use \jtl\Connector\Core\Utilities\Language as LanguageUtil;
+use \jtl\Connector\Core\Config\Config;
+use \jtl\Connector\Core\Config\Loader\Json as ConfigJson;
+
 class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
+    protected $config;
+
     public function getCapabilities()
     {
         return array(
@@ -34,6 +42,11 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
  
     public function install()
     {
+        require_once (dirname(__FILE__) . '/vendor/autoload.php');
+
+        $json = new ConfigJson(__DIR__ . '/config/config.json');
+        $this->config = new Config(array($json));
+
         if (!$this->assertVersionGreaterThen('4.2.3') || !$this->assertVersionLesserThen('5.0.0')) {
             return array(
                 'success' => false,
@@ -41,19 +54,13 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
             );
         }
 
-        // PHP
-        if (!version_compare(PHP_VERSION, '5.4', '>=')) {
+        // Check requirements
+        try {
+            CheckUtil::run();
+        } catch (\Exception $e) {
             return array(
                 'success' => false,
-                'message' => 'Das Plugin benötigt mindestens die PHP Version 5.4, ' . PHP_VERSION . ' ist installiert.'
-            );
-        }
-
-        // Sqlite 3
-        if (!extension_loaded('sqlite3') || !class_exists('Sqlite3')) {
-            return array(
-                'success' => false,
-                'message' => 'Das Plugin benötigt die sqlite3 PHP extension.'
+                'message' => $e->getMessage()
             );
         }
 
@@ -94,6 +101,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         $this->createCategoryLevelTable();
         $this->createMappingTables();
         $this->fillCategoryLevelTable();
+        $this->fillCategoryTable();
 
         return array(
             'success' => true,
@@ -151,6 +159,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         $this->createPaymentTable();
         $this->createPaymentMappingTable();
         $this->createUnitTable();
+        $this->createCategoryTable();
     }
 
     private function dropMappingTable()
@@ -171,6 +180,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_unit_i18n`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_unit`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_payment`');
+        Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_category`');
     }
 
     public function enable()
@@ -307,6 +317,60 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         }
     }
 
+    private function fillCategoryTable()
+    {
+        // Check Mapping activation
+        $categoryMapper = Mmc::getMapper('Category');
+        $categoryCount = $categoryMapper->fetchCountForLevel(2);
+        $o = new \StdClass();
+        $o->key = 'category_mapping';
+        $o->value = true;
+
+        if ($categoryCount > 0) {
+            $o->value = false;
+            $this->config->write($o);
+
+            return;
+        } else {
+            $this->config->write($o);
+        }
+
+        $mainShopId = (int) Shopware()->Db()->fetchOne('SELECT id FROM s_core_shops WHERE `default` = 1');
+        $shopCategories = Shopware()->Db()->fetchAssoc(
+            'SELECT s.id, s.category_id, l.locale
+             FROM s_core_shops s
+             JOIN s_core_locales l ON l.id = s.locale_id
+             ORDER BY s.default DESC'
+        );
+
+        if (count($shopCategories) > 0) {
+            $parentCategoryId = null;
+            foreach ($shopCategories as $shopCategory) {
+                $categoryId = (int) $shopCategory['category_id'];
+                if ((int) $shopCategory['id'] == $mainShopId) {
+                    $parentCategoryId = (int) $shopCategory['category_id'];
+
+                    continue;
+                }
+
+                if ($parentCategoryId === null) {
+                    continue;
+                }
+
+                $sql = '
+                    INSERT INTO jtl_connector_category
+                    (
+                        parent_id, lang, category_id
+                    )
+                    VALUES (?,?,?)
+                ';
+
+                Shopware()->Db()->query($sql, array($parentCategoryId, LanguageUtil::map($shopCategory['locale']), $categoryId));
+                Shopware()->Db()->delete('jtl_connector_category_level', array('category_id = ?' => $categoryId));
+            }
+        }
+    }
+
     private function createUnitTable()
     {
         $sql = '
@@ -331,6 +395,25 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
             ALTER TABLE `jtl_connector_unit_i18n`
             ADD CONSTRAINT `jtl_connector_unit_i18n_1` FOREIGN KEY (`unit_id`) REFERENCES `jtl_connector_unit` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
             ALTER TABLE `jtl_connector_unit_i18n` ADD INDEX( `unit_id`, `languageIso`);
+        ';
+
+        Shopware()->Db()->query($sql);
+    }
+
+    private function createCategoryTable()
+    {
+        $sql = '
+            CREATE TABLE IF NOT EXISTS `jtl_connector_category` (
+              `parent_id` int(11) unsigned NOT NULL,
+              `lang` varchar(3) NOT NULL,
+              `category_id` int(11) unsigned NOT NULL,
+              PRIMARY KEY (`parent_id`, `lang`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+            ALTER TABLE `jtl_connector_category`
+            ADD CONSTRAINT `jtl_connector_category_1` FOREIGN KEY (`parent_id`) REFERENCES `s_categories` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
+            ALTER TABLE `jtl_connector_category`
+            ADD CONSTRAINT `jtl_connector_category_2` FOREIGN KEY (`category_id`) REFERENCES `s_categories` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
+            ALTER TABLE `jtl_connector_category` ADD INDEX(`category_id`);
         ';
 
         Shopware()->Db()->query($sql);
