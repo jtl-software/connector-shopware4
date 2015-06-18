@@ -351,7 +351,7 @@ class Category extends DataMapper
     public function prepareCategoryMapping(CategoryModel $category, CategorySW $categorySW)
     {
         foreach ($category->getI18ns() as $i18n) {
-            if (LanguageUtil::map(null, null, $i18n->getLanguageISO()) != Shopware()->Shop()->getLocale()->getLocale()) {
+            if (strlen($i18n->getLanguageISO()) > 0 && LanguageUtil::map(null, null, $i18n->getLanguageISO()) != Shopware()->Shop()->getLocale()->getLocale()) {
                 $categoryMappingSW = $this->findCategoryMappingByParent($categorySW->getId(), $i18n->getLanguageISO());
 
                 if ($categoryMappingSW === null) {
@@ -376,6 +376,9 @@ class Category extends DataMapper
                 $categoryMappingSW->setMetaKeywords($i18n->getMetaKeywords());
                 $categoryMappingSW->setCmsHeadline($i18n->getName());
                 $categoryMappingSW->setCmsText($i18n->getDescription());
+
+                $this->prepareAttributeAssociatedData($category, $categoryMappingSW);
+                $categoryMappingSW->setCustomerGroups($categorySW->getCustomerGroups());
 
                 $this->Manager()->persist($categoryMappingSW);
                 $this->Manager()->flush($categoryMappingSW);
