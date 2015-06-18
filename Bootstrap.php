@@ -4,6 +4,7 @@ use \jtl\Connector\Core\System\Check as CheckUtil;
 use \jtl\Connector\Core\Utilities\Language as LanguageUtil;
 use \jtl\Connector\Core\Config\Config;
 use \jtl\Connector\Core\Config\Loader\Json as ConfigJson;
+use \jtl\Connector\Core\IO\Path;
 
 class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
@@ -42,9 +43,9 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
  
     public function install()
     {
-        require_once (dirname(__FILE__) . '/vendor/autoload.php');
+        require_once (dirname(__FILE__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php');
 
-        $json = new ConfigJson(__DIR__ . '/config/config.json');
+        $json = new ConfigJson(Path::combine(__DIR__, 'config', 'config.json'));
         $this->config = new Config(array($json));
 
         if (!$this->assertVersionGreaterThen('4.2.3') || !$this->assertVersionLesserThen('5.0.0')) {
