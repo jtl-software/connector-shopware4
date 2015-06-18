@@ -346,6 +346,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         $shopCategories = Shopware()->Db()->fetchAssoc(
             'SELECT s.id, s.category_id, l.locale
              FROM s_core_shops s
+             JOIN s_categories c ON c.id = s.category_id
              JOIN s_core_locales l ON l.id = s.locale_id
              ORDER BY s.default DESC'
         );
