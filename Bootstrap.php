@@ -129,6 +129,8 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
                 Shopware()->Db()->query("UPDATE s_articles_details SET active = 0 WHERE ordernumber LIKE '%.jtlcon.0'");
                 break;
             case '1.0.2':
+                $this->createCategoryTable();
+                $this->fillCategoryTable();
                 break;
             default:
                 return false;
