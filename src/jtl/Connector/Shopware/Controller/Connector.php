@@ -6,6 +6,7 @@
 
 namespace jtl\Connector\Shopware\Controller;
 
+use jtl\Connector\Application\Application;
 use \jtl\Connector\Result\Action;
 use \jtl\Connector\Shopware\Utilities\Mmc;
 use \jtl\Connector\Core\Logger\Logger;
@@ -36,7 +37,8 @@ class Connector extends DataController
         $identification = new ConnectorIdentification;
         $identification->setEndpointVersion($plugin_controller->getVersion())
             ->setPlatformName('Shopware')
-            ->setPlatformVersion($sw::VERSION);
+            ->setPlatformVersion($sw::VERSION)
+            ->setProtocolVersion(Application()->getProtocolVersion());
 
         $action->setResult($identification);
 
