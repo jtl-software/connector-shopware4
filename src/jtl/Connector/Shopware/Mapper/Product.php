@@ -65,55 +65,6 @@ class Product extends DataMapper
             return $paginator->count();
         }
 
-        /*
-        $result = Shopware()->Db()->query(
-            'SELECT
-                detail.*,
-                article.*,
-                unit.*,
-                tax.*,
-                categories.*,
-                mainDetail.*,
-                price.*,
-                information.*,
-                attribute.*,
-                download.*,
-                supplier.*,
-                pricegroup.*,
-                discount.*,
-                customergroup.*,
-                configuratorOption.*,
-                propertygroup.*,
-                propertyoption.*,
-                propertyvalue.*
-            FROM s_articles_details detail
-            LEFT JOIN s_articles article ON detail.articleID = article.id
-            LEFT JOIN jtl_connector_link_detail link ON link.product_id = article.id
-                AND link.detail_id = detail.id
-            LEFT JOIN s_core_units unit ON unit.id = detail.unitID
-            LEFT JOIN s_core_tax tax ON tax.id = article.taxID
-            LEFT JOIN s_articles_categories categories ON categories.articleID = article.id
-            LEFT JOIN s_articles_details mainDetail ON mainDetail.id = article.main_detail_id
-            LEFT JOIN s_articles_prices price ON price.articleID = mainDetail.id
-            LEFT JOIN s_articles_information information ON information.articleID = article.id
-            LEFT JOIN s_articles_attributes attribute ON attribute.articleID = detail.articleID
-                AND attribute.articledetailsID = detail.id
-            LEFT JOIN s_articles_downloads download ON download.articleID = article.id
-            LEFT JOIN s_articles_supplier supplier ON supplier.id = article.supplierID
-            LEFT JOIN s_core_pricegroups pricegroup ON pricegroup.id = article.pricegroupID
-            LEFT JOIN s_core_pricegroups_discounts discount ON discount.groupID = pricegroup.id
-            LEFT JOIN s_articles_avoid_customergroups customergroup ON customergroup.articleID = article.id
-            LEFT JOIN s_article_configurator_option_relations configuratorOption ON configuratorOption.article_id = detail.id
-            LEFT JOIN s_filter propertygroup ON propertygroup.id = article.filtergroupID
-            LEFT JOIN s_filter_relations propertyrelation ON propertyrelation.groupID = propertygroup.id
-            LEFT JOIN s_filter_options propertyoption ON propertyoption.id = propertyrelation.optionID
-            LEFT JOIN s_filter_values propertyvalue ON propertyvalue.optionID = propertyoption.id
-            WHERE link.host_id IS NULL
-            ORDER BY detail.kind
-            LIMIT 0,50'
-        );
-        */
-
         $query = $this->Manager()->createQueryBuilder()->select(
                 'detail',
                 'article',
