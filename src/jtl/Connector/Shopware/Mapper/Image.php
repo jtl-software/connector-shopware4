@@ -6,8 +6,8 @@
 
 namespace jtl\Connector\Shopware\Mapper;
 
+use jtl\Connector\Core\Utilities\Seo;
 use \jtl\Connector\Drawing\ImageRelationType;
-use \jtl\Connector\Core\Logger\Logger;
 use \jtl\Connector\Model\Image as ImageModel;
 use \jtl\Connector\Shopware\Model\Image as ImageConModel;
 use \jtl\Connector\Model\Identity;
@@ -145,11 +145,6 @@ class Image extends DataMapper
 
         $this->prepareImageAssociatedData($image, $mediaSW, $imageSW);
 
-        $violations = $this->Manager()->validate($mediaSW);
-        if ($violations->count() > 0) {
-            throw new ApiException\ValidationException($violations);
-        }
-
         $this->Manager()->persist($mediaSW);
 
         if ($imageSW !== null) {
@@ -227,6 +222,14 @@ class Image extends DataMapper
                 }
                 break;
         }
+
+        $mediaSW = $this->Manager()->getRepository('Shopware\Models\Media\Media')->find((int) $mediaId);
+        if ($mediaSW !== null) {
+            @unlink(sprintf('%s%s', Shopware()->OldPath(), $mediaSW->getPath()));
+
+            $this->Manager()->remove($mediaSW);
+            $this->Manager()->flush();
+        }
     }
 
     protected function prepareImageAssociatedData(ImageModel &$image, MediaSW &$mediaSW = null, \Shopware\Components\Model\ModelEntity &$imageSW = null)
@@ -284,6 +287,16 @@ class Image extends DataMapper
         $productSW = $productMapper->find((int) $articleId);
         if ($productSW === null) {
             throw new \Exception(sprintf('Cannot find product with id (%s)', $articleId));
+        }
+
+        // Filename SEO
+        list ($uuid, $ext) = explode('.', $image->getFilename());
+        $seo = new Seo();
+        $filename = sprintf('%s.%s', $seo->create(sprintf('%s %s', $productSW->getName(), $detailSW->getNumber())), $ext);
+        $path = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . $filename;
+        if (copy($image->getFilename(), $path)) {
+            $file = new File($path);
+            $image->setFilename($path);
         }
 
         $mediaSW = $this->getMedia($image, $file);
