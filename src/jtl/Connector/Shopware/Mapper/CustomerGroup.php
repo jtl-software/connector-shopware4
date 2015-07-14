@@ -118,14 +118,12 @@ class CustomerGroup extends DataMapper
         // I18n
         foreach ($customerGroup->getI18ns() as $i18n) {
             if ($i18n->getLanguageISO() === LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
-                $groupKey = substr($i18n->getName(), 0, 5);
+
+                // EK fix, thanks Shopware :/
+                $groupKey = ($customerGroupSW->getKey() === 'EK') ? $customerGroupSW->getKey() : substr($i18n->getName(), 0, 5);
 
                 // If Update => update foreign tables
                 if ($customerGroupSW->getId() > 0) {
-
-                    // EK fix, thanks Shopware :/
-                    $groupKey = ($customerGroupSW->getKey() === 'EK') ? 'EK' : $groupKey;
-
                     foreach ($this->groupKeyTables as $table => $field) {
                         Shopware()->Db()->query(
                             sprintf('UPDATE %s SET %s = ? WHERE %s = ?', $table, $field, $field),
