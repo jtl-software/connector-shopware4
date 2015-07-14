@@ -124,7 +124,7 @@ class CustomerGroup extends DataMapper
                 if ($customerGroupSW->getId() > 0) {
 
                     // EK fix, thanks Shopware :/
-                    $groupKey = ($customerGroupSW->getKey() === 'EK') ? 'EK' : $customerGroupSW->getKey();
+                    $groupKey = ($customerGroupSW->getKey() === 'EK') ? 'EK' : $groupKey;
 
                     foreach ($this->groupKeyTables as $table => $field) {
                         Shopware()->Db()->query(
