@@ -105,11 +105,15 @@ class CustomerOrder extends DataController
                     $this->addPos($order, 'setShippingAddress', 'CustomerOrderShippingAddress', $orderSW['shipping']);
 
                     // Street and Salutation
-                    $order->getBillingAddress()->setStreet(sprintf('%s %s', $orderSW['billing']['street'], $orderSW['billing']['streetNumber']))
-                        ->setSalutation(Salutation::toConnector($orderSW['billing']['salutation']));
+                    if ($order->getBillingAddress() !== null) {
+                        $order->getBillingAddress()->setStreet(sprintf('%s %s', $orderSW['billing']['street'], $orderSW['billing']['streetNumber']))
+                            ->setSalutation(Salutation::toConnector($orderSW['billing']['salutation']));
+                    }
 
-                    $order->getShippingAddress()->setStreet(sprintf('%s %s', $orderSW['shipping']['street'], $orderSW['shipping']['streetNumber']))
-                        ->setSalutation(Salutation::toConnector($orderSW['shipping']['salutation']));
+                    if ($order->getShippingAddress() !== null) {
+                        $order->getShippingAddress()->setStreet(sprintf('%s %s', $orderSW['shipping']['street'], $orderSW['shipping']['streetNumber']))
+                            ->setSalutation(Salutation::toConnector($orderSW['shipping']['salutation']));
+                    }
 
                     // Adding shipping item
                     if ($orderSW['invoiceShippingNet'] > 0) {
