@@ -6,6 +6,7 @@
 
 namespace jtl\Connector\Shopware\Mapper;
 
+use jtl\Connector\Drawing\ImageRelationType;
 use \jtl\Connector\Mapper\IPrimaryKeyMapper;
 use \jtl\Connector\Linker\IdentityLinker;
 use \jtl\Connector\Core\Logger\Logger;
@@ -54,7 +55,7 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
         return ($hostId !== false) ? (int)$hostId : null;
     }
 
-    public function getEndpointId($hostId, $type)
+    public function getEndpointId($hostId, $type, $relationType = null)
     {
         $dbInfo = $this->getTableInfo($type);
         $endpointId = false;
@@ -70,17 +71,11 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                 }
                 break;
             case IdentityLinker::TYPE_IMAGE:
+                $table = ($relationType === ImageRelationType::TYPE_PRODUCT) ? 'jtl_connector_link_product_image' : $dbInfo['table'];
                 $endpointId = Shopware()->Db()->fetchOne(
-                    'SELECT image_id FROM jtl_connector_link_product_image WHERE host_id = ?',
+                    'SELECT image_id FROM ' . $table . ' WHERE host_id = ?',
                     array($hostId)
                 );
-
-                if ($endpointId === false) {
-                    $endpointId = Shopware()->Db()->fetchOne(
-                        'SELECT image_id FROM ' . $dbInfo['table'] . ' WHERE host_id = ?',
-                        array($hostId)
-                    );
-                }
                 break;
             default:
                 $endpointId = Shopware()->Db()->fetchOne(
@@ -116,6 +111,8 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                 break;
             case IdentityLinker::TYPE_IMAGE:
                 list ($mediaType, $foreignId, $mediaId) = IdConcatenator::unlink($endpointId);
+
+                Logger::write(sprintf('Save IMAGE link with mediaType (%s), foreignId (%s) and mediaId (%s)', $mediaType, $foreignId, $mediaId), Logger::DEBUG, 'linker');
 
                 if ($mediaType === Image::MEDIA_TYPE_PRODUCT) {
                     $sql = '
