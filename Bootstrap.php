@@ -115,6 +115,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         $this->createMappingTables();
         $this->fillCategoryLevelTable();
         $this->fillCategoryTable();
+        $this->fillPaymentTable();
 
         return array(
             'success' => true,
@@ -182,6 +183,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         $this->createCrossSellingMappingTable();
         $this->createPaymentTable();
         $this->createPaymentMappingTable();
+        $this->createPaymentTrigger();
         $this->createUnitTable();
         $this->createCategoryTable();
     }
@@ -206,6 +208,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_payment`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_crossselling`');
         Shopware()->Db()->query('DROP TABLE IF EXISTS `jtl_connector_category`');
+        Shopware()->Db()->query('DROP TRIGGER IF EXISTS `jtl_connector_payment`');
     }
 
     public function enable()
@@ -411,6 +414,18 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
         }
     }
 
+    private function fillPaymentTable()
+    {
+        Shopware()->Db()->query(
+            "INSERT INTO jtl_connector_payment
+            (
+              SELECT null, id, '', ordertime, '', invoice_amount_net, transactionID
+              FROM s_order
+              WHERE LENGTH(transactionID) > 0
+            )"
+        );
+    }
+
     private function createUnitTable()
     {
         $sql = '
@@ -591,6 +606,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
             ALTER TABLE `jtl_connector_link_image`
             ADD CONSTRAINT `jtl_connector_link_image_1` FOREIGN KEY (`media_id`) REFERENCES `s_media` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
             ALTER TABLE `jtl_connector_link_image` ADD INDEX(`host_id`);
+            ALTER TABLE `jtl_connector_link_image` ADD INDEX(`host_id`, `image_id`);
         ';
 
         Shopware()->Db()->query($sql);
@@ -711,6 +727,23 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
             ALTER TABLE `jtl_connector_crossselling` ADD INDEX(`host_id`);
         ';
 
+        Shopware()->Db()->query($sql);
+    }
+
+    private function createPaymentTrigger()
+    {
+        $sql = "
+            DROP TRIGGER IF EXISTS `jtl_connector_payment`;
+            CREATE TRIGGER `jtl_connector_payment` AFTER UPDATE ON `s_order`
+            FOR EACH ROW
+            BEGIN
+            IF LENGTH(NEW.transactionID) > 0 THEN
+                    SET @paymentId = (SELECT id FROM jtl_connector_payment WHERE customerOrderId = NEW.id);
+                    DELETE FROM jtl_connector_payment WHERE customerOrderId = NEW.id;
+                    INSERT IGNORE INTO jtl_connector_payment VALUES (if(@paymentId > 0, @paymentId, null), NEW.id, '', now(), '', NEW.invoice_amount_net, NEW.transactionID);
+                END IF;
+            END;
+        ";
         Shopware()->Db()->query($sql);
     }
 }
