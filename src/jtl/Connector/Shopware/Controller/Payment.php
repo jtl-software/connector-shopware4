@@ -11,6 +11,7 @@ use jtl\Connector\Core\Rpc\Error;
 use jtl\Connector\Core\Utilities\DataConverter;
 use jtl\Connector\Result\Action;
 use jtl\Connector\Shopware\Utilities\Mmc;
+use jtl\Connector\Shopware\Utilities\Payment as PaymentUtil;
 
 /**
  * Payment Controller
@@ -38,7 +39,16 @@ class Payment extends DataController
                 $payment = Mmc::getModel('Payment');
                 $payment->map(true, DataConverter::toObject($paymentSW, true));
 
-                $result[] = $payment;
+                $orderMapper = Mmc::getMapper('CustomerOrder');
+                $orderSW = $orderMapper->find($paymentSW['customerOrderId']);
+
+                if ($orderSW !== null) {
+                    if ($orderSW->getPayment() !== null) {
+                        $payment->setPaymentModuleCode(PaymentUtil::map(null, strtolower($orderSW->getPayment()->getName())));
+                    }
+
+                    $result[] = $payment;
+                }
             }
 
             $action->setResult($result);

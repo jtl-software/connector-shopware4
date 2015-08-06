@@ -152,15 +152,22 @@ class Specific extends DataMapper
         $specificId = (strlen($specific->getId()->getEndpoint()) > 0) ? (int)$specific->getId()->getEndpoint() : null;
 
         if ($specificId !== null && $specificId > 0) {
-            $specificSW = $this->find($specificId);
-            if ($specificSW !== null) {
-                foreach ($specificSW->getValues() as $valueSW) {
+            $optionSW = $this->find($specificId);
+            if ($optionSW !== null) {
+                foreach ($optionSW->getValues() as $valueSW) {
                     $this->deleteValueTranslationData($valueSW);
                     $this->Manager()->remove($valueSW);
                 }
 
                 $this->deleteTranslationData($optionSW);
-                $this->Manager()->remove($specificSW);
+                $this->Manager()->remove($optionSW);
+
+                foreach ($optionSW->getGroups() as $groupSW) {
+                    if (count($groupSW->getOptions()) == 1) {
+                        $this->Manager()->remove($groupSW);
+                    }
+                }
+
                 $this->Manager()->flush();
             }
         }
@@ -174,9 +181,8 @@ class Specific extends DataMapper
             $optionSW = $this->find($specificId);
         }
 
-
+        $name = null;
         if ($optionSW === null) {
-            $name = null;
             foreach ($specific->getI18ns() as $i18n) {
                 if ($i18n->getLanguageISO() === LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
                     $name = $i18n->getName();
