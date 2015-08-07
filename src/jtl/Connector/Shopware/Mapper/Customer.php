@@ -22,6 +22,26 @@ class Customer extends DataMapper
         return $this->Manager()->find('Shopware\Models\Customer\Customer', $id);
     }
 
+    public function findDebit($id)
+    {
+        return $this->Manager()->find('Shopware\Models\Customer\Debit', $id);
+    }
+
+    public function findDebitByUser($userId)
+    {
+        return $this->Manager()->createQueryBuilder()->select(
+                'debit',
+                'customer'
+            )
+            ->from('Shopware\Models\Customer\Debit', 'debit')
+            ->join('Shopware\Models\Customer\Customer', 'customer')
+            ->where('debit.customer = :userId')
+            ->setParameter(':userId', (int) $userId)
+            ->setFirstResult(0)
+            ->setMaxResults(1)
+            ->getQuery()->getOneOrNullResult();
+    }
+
     public function findAll($limit = 100, $count = false)
     {
         $query = $this->Manager()->createQueryBuilder()->select(
