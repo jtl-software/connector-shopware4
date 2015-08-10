@@ -315,10 +315,10 @@ class Image extends DataMapper
             $image->getSort()
         );
 
-        if (strlen($productSeo) > 70) {
-            $pos = strpos($productSeo, ' ', 70);
+        if (strlen($productSeo) > 60) {
+            $pos = strpos($productSeo, ' ', 60);
             if ($pos === false) {
-                $pos = 70;
+                $pos = 60;
             }
 
             $productSeo = substr($productSeo, 0, $pos);
@@ -330,6 +330,10 @@ class Image extends DataMapper
                 $detailSW->getNumber()
             )
         ), $ext);
+
+        if (strlen($filename) > 100) {
+            $filename = substr($filename, strlen($filename) - 100, 100);
+        }
 
         $path = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . $filename;
         if (copy($image->getFilename(), $path)) {
