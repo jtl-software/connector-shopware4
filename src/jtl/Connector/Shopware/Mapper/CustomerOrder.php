@@ -40,6 +40,8 @@ class CustomerOrder extends DataMapper
         $query = $this->Manager()->createQueryBuilder()->select(array(
                 'orders',
                 'customer',
+                'customer_shipping',
+                'customer_shipping_attribute',
                 'debit',
                 'attribute',
                 'details',
@@ -57,6 +59,8 @@ class CustomerOrder extends DataMapper
             ->from('jtl\Connector\Shopware\Model\Linker\CustomerOrder', 'orders')
             ->leftJoin('orders.linker', 'linker')
             ->leftJoin('orders.customer', 'customer')
+            ->leftJoin('customer.shipping', 'customer_shipping')
+            ->leftJoin('customer_shipping.attribute', 'customer_shipping_attribute')
             ->leftJoin('customer.debit', 'debit')
             ->leftJoin('orders.attribute', 'attribute')
             ->leftJoin('orders.details', 'details')
