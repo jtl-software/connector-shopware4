@@ -338,7 +338,7 @@ class Product extends DataMapper
         $productSW->setAdded($product->getCreationDate())
             ->setAvailableFrom($product->getAvailableFrom())
             ->setHighlight(intval($product->getIsTopProduct()))
-            ->setActive(true);
+            ->setActive($product->getIsActive());
 
         $inStock = 0;
         if ($product->getConsiderStock()) {
@@ -535,10 +535,10 @@ class Product extends DataMapper
         $detailSW->setAdditionalText($helper->getAdditionalName());
 
         $kind = ($isChild && $detailSW->getId() > 0 && $productSW->getMainDetail() !== null && $productSW->getMainDetail()->getId() == $detailSW->getId()) ? 1 : 2;
-        $active = 1;
+        $active = $product->getIsActive();
         if (!$isChild) {
             $kind = $this->isParent($product) ? 0 : 1;
-            $active = $kind;
+            $active = $this->isParent($product) ? false : $active;
         }
 
         //$kind = $isChild ? 2 : 1;
@@ -549,6 +549,7 @@ class Product extends DataMapper
             ->setStockMin(0)
             ->setWeight($product->getProductWeight())
             ->setInStock($product->getStockLevel()->getStockLevel())
+            ->setStockMin($product->getMinimumQuantity())
             ->setMinPurchase($product->getMinimumOrderQuantity())
             ->setReleaseDate($product->getAvailableFrom())
             ->setEan($product->getEan());
@@ -624,24 +625,27 @@ class Product extends DataMapper
             $this->Manager()->persist($attributeSW);
         }
 
-        foreach ($product->getAttributes() as $i => $attribute) {
-            $i++;
-            foreach ($attribute->getI18ns() as $attributeI18n) {
-                if ($attributeI18n->getLanguageISO() === LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
-                    //$setter = 'set' . ucfirst($attributeI18n->getName());
-                    $setter = "setAttr{$i}";
+        $i = 0;
+        foreach ($product->getAttributes() as $attribute) {
+            if (!$attribute->getIsCustomProperty()) {
+                $i++;
+                foreach ($attribute->getI18ns() as $attributeI18n) {
+                    if ($attributeI18n->getLanguageISO() === LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
+                        //$setter = 'set' . ucfirst($attributeI18n->getName());
+                        $setter = "setAttr{$i}";
 
-                    // active
-                    if ($attributeI18n->getName() === \jtl\Connector\Shopware\Model\ProductAttr::IS_ACTIVE) {
-                        if ($isChild) {
-                            $detailSW->setActive((int)$attributeI18n->getValue());
-                        } else {
-                            $productSW->setActive((int)$attributeI18n->getValue());
+                        // active
+                        if ($attributeI18n->getName() === \jtl\Connector\Shopware\Model\ProductAttr::IS_ACTIVE) {
+                            if ($isChild) {
+                                $detailSW->setActive((int)$attributeI18n->getValue());
+                            } else {
+                                $productSW->setActive((int)$attributeI18n->getValue());
+                            }
                         }
-                    }
 
-                    if (method_exists($attributeSW, $setter)) {
-                        $attributeSW->{$setter}($attributeI18n->getValue());
+                        if (method_exists($attributeSW, $setter)) {
+                            $attributeSW->{$setter}($attributeI18n->getValue());
+                        }
                     }
                 }
             }
@@ -752,9 +756,14 @@ class Product extends DataMapper
             $recommendedRetailPrice = Money::AsNet($recommendedRetailPrice, $product->getVat());
         }
         */
-        $recommendedRetailPrice = $product->getRecommendedRetailPrice();
 
-        $collection = ProductPriceMapper::buildCollection($product->getPrices(), $productSW, $detailSW, $recommendedRetailPrice);
+        $collection = ProductPriceMapper::buildCollection(
+            $product->getPrices(),
+            $productSW,
+            $detailSW,
+            $product->getRecommendedRetailPrice(),
+            $product->getPurchasePrice()
+        );
 
         if (count($collection) > 0) {
             $detailSW->setPrices($collection);
