@@ -172,6 +172,7 @@ class Customer extends DataMapper
         }
 
         $billingSW->setCompany($customer->getCompany())
+            ->setDepartment($customer->getDeliveryInstruction())
             ->setSalutation(Salutation::toEndpoint($customer->getSalutation()))
             ->setNumber($customer->getCustomerNumber())
             ->setFirstName($customer->getFirstName())
