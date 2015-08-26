@@ -6,7 +6,7 @@
 
 namespace jtl\Connector\Shopware\Controller;
 
-use jtl\Connector\Application\Application;
+use jtl\Connector\Model\ConnectorServerInfo;
 use \jtl\Connector\Result\Action;
 use \jtl\Connector\Shopware\Utilities\Mmc;
 use \jtl\Connector\Core\Logger\Logger;
