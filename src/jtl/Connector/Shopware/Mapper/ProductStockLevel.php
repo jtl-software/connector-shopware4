@@ -39,5 +39,6 @@ class ProductStockLevel extends DataMapper
         }
 
         throw new DatabaseException('Product Endpoint Id cannot be empty');
+        throw new DatabaseException('Product Endpoint Id cannot be empty');
     }
 }
