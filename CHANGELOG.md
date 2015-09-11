@@ -4,6 +4,7 @@
 - Added global exception handler
 - Added shopware link support
 - Added customer order tax free support
+- Added specific ci encoding support
 
 1.0.11
 ------
