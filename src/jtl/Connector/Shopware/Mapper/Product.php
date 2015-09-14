@@ -637,7 +637,12 @@ class Product extends DataMapper
                 $i++;
                 foreach ($attribute->getI18ns() as $attributeI18n) {
                     if ($attributeI18n->getLanguageISO() === LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
-                        //$setter = 'set' . ucfirst($attributeI18n->getName());
+
+                        // Work Around, thx @db structure
+                        if ($i == 17) {
+                            $i++;
+                        }
+
                         $setter = "setAttr{$i}";
 
                         // active
