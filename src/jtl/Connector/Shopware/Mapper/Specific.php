@@ -261,6 +261,7 @@ class Specific extends DataMapper
     {
         // SpecificI18n
         $translation = new TranslationUtil;
+        $shopMapper = Mmc::getMapper('Shop');
         foreach ($specific->getI18ns() as $i18n) {
             $locale = LocaleUtil::getByKey(LanguageUtil::map(null,null, $i18n->getLanguageISO()));
 
@@ -270,9 +271,16 @@ class Specific extends DataMapper
                 continue;
             }
 
+            $shop = $shopMapper->findByLocale($locale->getLocale());
+
+            if ($shop === null) {
+                Logger::write(sprintf('Could not find any shop with locale (%s) and iso (%s)', $locale->getLocale(), $i18n->getLanguageISO()), Logger::WARNING, 'database');
+                continue;
+            }
+
             if ($i18n->getLanguageISO() !== LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
                 $translation->write(
-                    $locale->getId(),
+                    $shop->getId(),
                     'propertyoption',
                     $optionSW->getId(),
                     array(
@@ -296,8 +304,15 @@ class Specific extends DataMapper
                     if ($valueId !== null && $valueI18n->getLanguageISO() !== LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
                         $locale = LocaleUtil::getByKey(LanguageUtil::map(null,null, $valueI18n->getLanguageISO()));
                         if ($locale !== null) {
+                            $shop = $shopMapper->findByLocale($locale->getLocale());
+
+                            if ($shop === null) {
+                                Logger::write(sprintf('Could not find any shop with locale (%s) and iso (%s)', $locale->getLocale(), $i18n->getLanguageISO()), Logger::WARNING, 'database');
+                                continue;
+                            }
+
                             $translation->write(
-                                $locale->getId(),
+                                $shop->getId(),
                                 'propertyvalue',
                                 $valueId,
                                 array(

@@ -6,6 +6,7 @@
 
 namespace jtl\Connector\Shopware\Controller;
 
+use jtl\Connector\Core\Utilities\Language as LanguageUtil;
 use \jtl\Connector\Result\Action;
 use \jtl\Connector\Core\Rpc\Error;
 use \jtl\Connector\Core\Model\QueryFilter;
@@ -53,7 +54,8 @@ class Customer extends DataController
                     // Salutation
                     $customer->setSalutation(Salutation::toConnector($customer->getSalutation()))
                         ->setCountryIso($iso)
-                        ->setStreet(sprintf('%s %s', $customerSW['billing']['street'], $customerSW['billing']['streetNumber']));
+                        ->setStreet(sprintf('%s %s', $customerSW['billing']['street'], $customerSW['billing']['streetNumber']))
+                        ->setLanguageISO(LanguageUtil::map($customerSW['languageSubShop']['locale']['locale']));
 
                     // Attributes
                     if (isset($customerSW['billing']['attribute']) && is_array($customerSW['billing']['attribute'])) {
