@@ -2,7 +2,7 @@
 -----
 - Fixed product variation language bug
 - Fixed measurement language bug
-- Added product variation type support
+- Added product variation type (standard, swatches) support
 - Added product child image relation support
 
 1.1.1
