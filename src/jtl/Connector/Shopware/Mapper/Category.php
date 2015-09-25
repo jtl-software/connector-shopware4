@@ -28,14 +28,20 @@ class Category extends DataMapper
         return $this->Manager()->find('Shopware\Models\Category\Category', $id);
     }
 
-    public function findByNameAndLevel($name, $level = 0)
+    public function findByNameAndLevel($name, $parentId = null)
     {
+        $sql = ' AND c.parent IS NULL';
+        $params = array($name);
+        if ($parentId !== null) {
+            $sql = ' AND c.parent = ?';
+            $params[] = $parentId;
+        }
+
         $id = Shopware()->Db()->fetchOne(
             'SELECT c.id
               FROM s_categories c
-              JOIN jtl_connector_category_level l ON l.category_id = c.id
-              WHERE c.description = ? AND l.level = ?',
-            array($name, $level)
+              WHERE c.description = ?' . $sql,
+            $params
         );
 
         if ($id !== null && (int) $id > 0) {
@@ -206,7 +212,6 @@ class Category extends DataMapper
     public function save(CategoryModel $category)
     {
         $categorySW = null;
-        //$result = new CategoryModel;
         $result = $category;
 
         if ($category->getParentCategoryId() !== null && isset(self::$parentCategoryIds[$category->getParentCategoryId()->getHost()])) {
@@ -294,7 +299,7 @@ class Category extends DataMapper
             }
 
             if ($name !== null) {
-                $categorySW = $this->findByNameAndLevel($name, $category->getLevel());
+                $categorySW = $this->findByNameAndLevel($name, $parentId);
             }
         }
 
