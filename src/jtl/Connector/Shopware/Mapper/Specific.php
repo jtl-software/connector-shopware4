@@ -271,22 +271,24 @@ class Specific extends DataMapper
                 continue;
             }
 
-            $shop = $shopMapper->findByLocale($locale->getLocale());
+            $shops = $shopMapper->findByLocale($locale->getLocale());
 
-            if ($shop === null) {
+            if ($shops === null) {
                 Logger::write(sprintf('Could not find any shop with locale (%s) and iso (%s)', $locale->getLocale(), $i18n->getLanguageISO()), Logger::WARNING, 'database');
                 continue;
             }
 
             if ($i18n->getLanguageISO() !== LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
-                $translation->write(
-                    $shop->getId(),
-                    'propertyoption',
-                    $optionSW->getId(),
-                    array(
-                        'optionName' => $i18n->getName()
-                    )
-                );
+                foreach ($shops as $shop) {
+                    $translation->write(
+                        $shop->getId(),
+                        'propertyoption',
+                        $optionSW->getId(),
+                        array(
+                            'optionName' => $i18n->getName()
+                        )
+                    );
+                }
             }
         }
 
@@ -304,21 +306,23 @@ class Specific extends DataMapper
                     if ($valueId !== null && $valueI18n->getLanguageISO() !== LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
                         $locale = LocaleUtil::getByKey(LanguageUtil::map(null,null, $valueI18n->getLanguageISO()));
                         if ($locale !== null) {
-                            $shop = $shopMapper->findByLocale($locale->getLocale());
+                            $shops = $shopMapper->findByLocale($locale->getLocale());
 
-                            if ($shop === null) {
+                            if ($shops === null) {
                                 Logger::write(sprintf('Could not find any shop with locale (%s) and iso (%s)', $locale->getLocale(), $i18n->getLanguageISO()), Logger::WARNING, 'database');
                                 continue;
                             }
 
-                            $translation->write(
-                                $shop->getId(),
-                                'propertyvalue',
-                                $valueId,
-                                array(
-                                    'optionValue' => $valueI18n->getValue()
-                                )
-                            );
+                            foreach ($shops as $shop) {
+                                $translation->write(
+                                    $shop->getId(),
+                                    'propertyvalue',
+                                    $valueId,
+                                    array(
+                                        'optionValue' => $valueI18n->getValue()
+                                    )
+                                );
+                            }
                         }
                     }
                 }
