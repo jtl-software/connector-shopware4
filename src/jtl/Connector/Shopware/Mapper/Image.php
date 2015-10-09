@@ -38,7 +38,6 @@ class Image extends DataMapper
 
         switch ($relationType) {
             case ImageRelationType::TYPE_PRODUCT:
-                /*
                 return Shopware()->Db()->fetchAssoc(
                     'SELECT i.id as cId, a.main_detail_id as detailId, i.*, m.path
                       FROM s_articles_img i
@@ -59,8 +58,8 @@ class Image extends DataMapper
                           AND l.host_id IS NULL
                       LIMIT ' . intval($limit)
                 );
-                */
 
+                /*
                 return $this->Manager()->createQueryBuilder()
                     ->select(
                         'image',
@@ -79,6 +78,7 @@ class Image extends DataMapper
                     ->setMaxResults($limit)
                     ->where('linker.hostId IS NULL')
                     ->getQuery()->getResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+                */
                 break;
             case ImageRelationType::TYPE_CATEGORY:
                 $query = Shopware()->Models()->createNativeQuery(
@@ -116,7 +116,6 @@ class Image extends DataMapper
         $count = 0;
         switch ($relationType) {
             case ImageRelationType::TYPE_PRODUCT:
-                /*
                 $counts = Shopware()->Db()->fetchAssoc(
                     'SELECT count(*) as count
                       FROM s_articles_img i
@@ -140,13 +139,14 @@ class Image extends DataMapper
                 foreach ($counts as $c) {
                     $count += (int) $c['count'];
                 }
-                */
 
+                /*
                 $query = Shopware()->Models()->createNativeQuery(
                     'SELECT count(*) as count
                     FROM s_articles_img a
                     LEFT JOIN jtl_connector_link_product_image p ON p.id = a.id
                     WHERE p.host_id IS NULL', $rsm);
+                */
                 break;
             case ImageRelationType::TYPE_CATEGORY:
                 $query = Shopware()->Models()->createNativeQuery(
@@ -259,14 +259,26 @@ class Image extends DataMapper
 
                 $imageSW = $this->Manager()->getRepository('Shopware\Models\Article\Image')->find((int) $imageId);
                 if ($imageSW !== null) {
-                    $imageChildSW = $this->loadChildImage($detailId, $imageSW->getId());
+
+                    if ($imageSW->getParent() !== null) {
+                        if (!$this->isParentImageInUse($imageSW->getParent()->getId(), $detailId)) {
+                            $this->Manager()->remove($imageSW->getParent());
+                        } else {
+                            $deleteMedia = false;
+                        }
+                    }
+
+                    /*
+                    $imageChildSW = $this->loadChildImage($imageSW->getId(), $detailId);
 
                     //Check if product is a configurator and check if the image is in use from another child
                     if ($this->isParentImageInUse($imageSW->getId(), $detailId)) {
+                        $deleteMedia = false;
                         $imageSW = $imageChildSW;
                     } elseif ($imageChildSW !== null) {
                         $this->Manager()->remove($imageChildSW);
                     }
+                    */
 
                     try {
                         $this->Manager()->remove($imageSW);
@@ -456,6 +468,12 @@ class Image extends DataMapper
             $this->Manager()->persist($mappingSW);
         } else {
             Shopware()->Db()->delete('s_article_img_mapping_rules', array('mapping_id = ?' => $mappingSW->getId()));
+            //Varkombi parent image feature, maybe later
+            /*
+            foreach ($detailSW->getConfiguratorOptions() as $optionSW) {
+                Shopware()->Db()->delete('s_article_img_mapping_rules', array('option_id = ?' => $optionSW->getId()));
+            }
+            */
         }
 
         $mappingSW->setImage($imageSW);
@@ -495,7 +513,7 @@ class Image extends DataMapper
         return (is_array($results) && count($results) > 0);
     }
 
-    protected function loadChildImage($detailId, $parentId)
+    protected function loadChildImage($parentId, $detailId)
     {
         try {
             return $this->Manager()->createQueryBuilder()
@@ -515,7 +533,7 @@ class Image extends DataMapper
 
     protected function getChildImage(ImageModel $image, MediaSW $mediaSW, DetailSW $detailSW, ArticleImageSW $parentImageSW)
     {
-        $imageSW = $this->loadChildImage($detailSW->getId(), $parentImageSW->getId());
+        $imageSW = $this->loadChildImage($parentImageSW->getId(), $detailSW->getId());
 
         if ($imageSW === null) {
             $imageSW = new ArticleImageSW;
@@ -782,11 +800,6 @@ class Image extends DataMapper
                 ->setCreated(new \DateTime())
                 ->setFile($file);
         }
-    }
-
-    protected function isChild(ImageModel &$image)
-    {
-        return (strlen($image->getForeignKey()->getEndpoint()) > 0 && strpos($image->getForeignKey()->getEndpoint(), '_') !== false);
     }
 
     protected function getUploadDir()
