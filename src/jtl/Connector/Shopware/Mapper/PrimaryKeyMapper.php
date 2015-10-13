@@ -183,8 +183,16 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                     case IdentityLinker::TYPE_IMAGE:
                         list ($mediaType, $foreignId, $mediaId) = IdConcatenator::unlink($endpointId);
 
+                        $where = array($dbInfo['pk'] . ' = ?' => $mediaId);
+                        if ($mediaType === Image::MEDIA_TYPE_PRODUCT) {
+                            $where = array('id = ?' => $foreignId);
+                            $dbInfo['table'] = 'jtl_connector_link_product_image';
+                        }
+
+                        /*
                         $where = ($mediaType === Image::MEDIA_TYPE_PRODUCT) ?
                             array('id = ?' => $foreignId) : array($dbInfo['pk'] . ' = ?' => $mediaId);
+                        */
                         break;
                     default:
                         $where = array($dbInfo['pk'] . ' = ?' => $endpointId);
@@ -193,6 +201,8 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
             }
 
             if ($hostId) {
+                // Cannot delete in product image table if ony hostId is set cause of missing mediaType
+
                 $where = array('host_id = ?' => $hostId);
             }
 
@@ -235,42 +245,42 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
         switch ($type) {
             case IdentityLinker::TYPE_CATEGORY:
                 return array(
-                    'table' => 'jtl_connector_link_category', 
+                    'table' => 'jtl_connector_link_category',
                     'pk' => 'category_id'
                 );
             case IdentityLinker::TYPE_CUSTOMER:
                 return array(
-                    'table' => 'jtl_connector_link_customer', 
+                    'table' => 'jtl_connector_link_customer',
                     'pk' => 'customer_id'
                 );
             case IdentityLinker::TYPE_PRODUCT:
                 return array(
-                    'table' => 'jtl_connector_link_detail', 
+                    'table' => 'jtl_connector_link_detail',
                     'pk' => 'product_id'
                 );
             case IdentityLinker::TYPE_IMAGE:
                 return array(
-                    'table' => 'jtl_connector_link_image', 
+                    'table' => 'jtl_connector_link_image',
                     'pk' => 'media_id'
                 );
             case IdentityLinker::TYPE_MANUFACTURER:
                 return array(
-                    'table' => 'jtl_connector_link_manufacturer', 
+                    'table' => 'jtl_connector_link_manufacturer',
                     'pk' => 'manufacturer_id'
                 );
             case IdentityLinker::TYPE_DELIVERY_NOTE:
                 return array(
-                    'table' => 'jtl_connector_link_note', 
+                    'table' => 'jtl_connector_link_note',
                     'pk' => 'note_id'
                 );
             case IdentityLinker::TYPE_CUSTOMER_ORDER:
                 return array(
-                    'table' => 'jtl_connector_link_order', 
+                    'table' => 'jtl_connector_link_order',
                     'pk' => 'order_id'
                 );
             case IdentityLinker::TYPE_SPECIFIC:
                 return array(
-                    'table' => 'jtl_connector_link_specific', 
+                    'table' => 'jtl_connector_link_specific',
                     'pk' => 'specific_id'
                 );
             case IdentityLinker::TYPE_SPECIFIC_VALUE:
