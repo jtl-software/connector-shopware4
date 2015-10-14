@@ -32,6 +32,11 @@ class Image extends DataMapper
         return $this->Manager()->getRepository('Shopware\Models\Media\Media')->find((int) $id);
     }
 
+    public function findBy(array $kv)
+    {
+        return $this->Manager()->getRepository('Shopware\Models\Media\Media')->findOneBy($kv);
+    }
+
     public function findArticleImage($id)
     {
         try {
@@ -228,7 +233,7 @@ class Image extends DataMapper
             $this->flush();
 
             // Save product image variation mappings, if product is a child
-            if ($imageSW !== null && $imageSW->getParent() !== null
+            if ($imageSW !== null && $imageSW instanceof ArticleImageSW && $imageSW->getParent() !== null
                 && $image->getRelationType() === ImageRelationType::TYPE_PRODUCT) {
 
                 // Save mapping and rule
@@ -301,28 +306,6 @@ class Image extends DataMapper
                         ->setParameter('detailId', $detailId)
                         ->getQuery()
                         ->execute();
-
-                    $medias = Shopware()->Db()->fetchAssoc(
-                        'SELECT m.id
-                          FROM s_media m
-                          LEFT JOIN s_articles_img i ON i.media_id = m.id
-                          WHERE i.id IS NULL'
-                    );
-
-                    if (is_array($medias) && count($medias) > 0) {
-                        foreach ($medias as $media) {
-                            $mediaSW = $this->find($media['id']);
-                            if ($mediaSW !== null) {
-                                $manager = Shopware()->Container()->get('thumbnail_manager');
-                                $manager->removeMediaThumbnails($mediaSW);
-
-                                @unlink(sprintf('%s%s', Shopware()->OldPath(), $mediaSW->getPath()));
-                                $this->Manager()->remove($mediaSW);
-                            }
-                        }
-
-                        $this->Manager()->flush();
-                    }
 
                     return;
                 }
@@ -489,7 +472,7 @@ class Image extends DataMapper
 
         $parentExists = false;
         $childImageSW = null;
-        if ($productSW->getConfiguratorSet() !== null && $productSW->getConfiguratorSet()->getId() > 0) {
+        if ($productMapper->isChildSW($productSW, $detailSW)) {
             $parentImageSW = $this->findParentImage($articleId, $image->getFilename());
             if ($parentImageSW && $parentImageSW !== null) {
                 $imageSW = $parentImageSW;
@@ -506,7 +489,7 @@ class Image extends DataMapper
         }
 
         // Varkombi?
-        if ($productSW->getConfiguratorSet() !== null && $productSW->getConfiguratorSet()->getId() > 0) {
+        if ($productMapper->isChildSW($productSW, $detailSW)) {
             if (!$parentExists && $imageSW->getId() > 0 && $this->isParentImageInUse($imageSW->getId(), $detailSW->getId())) {
                 // Wenn es noch Kinder gibt die das Vaterbild nutzen, lege ein neues Vaterbild an
                 $mediaSW = $this->getNewMedia($image, $file);
@@ -522,7 +505,7 @@ class Image extends DataMapper
             $productMapper = Mmc::getMapper('Product');
 
             // if detail is a child
-            if ($imageSW->getParent() === null && $productMapper->isChildSW($productSW, $detailSW)) {
+            if ($imageSW->getParent() === null) {
                 $childImageSW = $this->getChildImage($image, $mediaSW, $detailSW, $imageSW);
 
                 $this->Manager()->persist($childImageSW);
@@ -867,10 +850,16 @@ class Image extends DataMapper
         }
     }
 
-    protected function getUploadDir()
+    protected function getUploadDir($relativeley = false, $stripLastSlash = false)
     {
         // the absolute directory path where uploaded documents should be saved
-        return Shopware()->DocPath('media_' . strtolower(MediaSW::TYPE_IMAGE));
+        $path = Shopware()->DocPath('media_' . strtolower(MediaSW::TYPE_IMAGE));
+
+        if ($relativeley) {
+            $path = str_replace(Shopware()->OldPath(), '', $path);
+        }
+
+        return $stripLastSlash ? substr($path, 0, strrpos($path, DIRECTORY_SEPARATOR)) : $path;
     }
 
     protected function generadeMD5($path)

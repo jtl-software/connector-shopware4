@@ -830,7 +830,8 @@ class Product extends DataMapper
 
             $confiSet->setOptions($options)
                 ->setGroups($groups)
-                ->setType($this->calcVariationType($types));
+                //->setType($this->calcVariationType($types));
+                ->setType(0);
 
             $this->Manager()->persist($confiSet);
 
