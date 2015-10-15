@@ -65,10 +65,12 @@ class Image extends DataMapper
         switch ($relationType) {
             case ImageRelationType::TYPE_PRODUCT:
                 return Shopware()->Db()->fetchAssoc(
-                    'SELECT i.id as cId, a.main_detail_id as detailId, i.*, m.path
+                    'SELECT i.id as cId, if (d.id > 0, d.id, a.main_detail_id) as detailId, i.*, m.path
                       FROM s_articles_img i
                       LEFT JOIN s_articles_img c ON c.parent_id = i.id
                       LEFT JOIN s_articles a ON a.id = i.articleID
+                      LEFT JOIN s_articles_details d ON d.articleID = a.id
+                          AND d.kind = 0
                       LEFT JOIN jtl_connector_link_product_image l ON l.id = i.id
                       JOIN s_media m ON m.id = i.media_id
                       WHERE i.articleID IS NOT NULL
@@ -316,7 +318,10 @@ class Image extends DataMapper
 
                     if ($imageSW->getParent() !== null) {
                         $isParentRemoved = false;
-                        if (!$this->isParentImageInUse($imageSW->getParent()->getId(), $detailId)) {
+                        $detailSW = $this->Manager()->getRepository('Shopware\Models\Article\Detail')->find((int) $detailId);
+                        if ($detailSW !== null && $detailSW->getKind() == 0
+                            &&!$this->isParentImageInUse($imageSW->getParent()->getId(), $detailId)) {
+
                             $this->Manager()->remove($imageSW->getParent());
                             $isParentRemoved = true;
                         } else {
@@ -502,8 +507,6 @@ class Image extends DataMapper
                 $mediaSW->setArticles($collection);
             }
 
-            $productMapper = Mmc::getMapper('Product');
-
             // if detail is a child
             if ($imageSW->getParent() === null) {
                 $childImageSW = $this->getChildImage($image, $mediaSW, $detailSW, $imageSW);
@@ -513,10 +516,10 @@ class Image extends DataMapper
                 $imageSW = $childImageSW;
             }
         } else {
-            $this->copyNewMedia($image, $mediaSW, $file);
+            $this->copyNewMedia($image, $mediaSW, $file, $parentExists);
         }
 
-        $this->copyNewMedia($image, $mediaSW, $file);
+        $this->copyNewMedia($image, $mediaSW, $file, $parentExists);
     }
 
     protected function saveImageMapping(ArticleImageSW $parentSW, $detailId = null)
@@ -830,10 +833,10 @@ class Image extends DataMapper
         return $mediaSW;
     }
 
-    protected function copyNewMedia(ImageModel $image, MediaSW &$mediaSW, File $file)
+    protected function copyNewMedia(ImageModel $image, MediaSW &$mediaSW, File $file, $parentExists = false)
     {
         //if ($mediaSW->getId() > 0 && file_exists($image->getFilename()) && $this->generadeMD5($mediaSW->getPath()) !== md5_file($image->getFilename())) {
-        if ($mediaSW->getId() > 0 && file_exists($image->getFilename())) {
+        if (!$parentExists && $mediaSW->getId() > 0 && file_exists($image->getFilename())) {
             $stats = stat($image->getFilename());
             $infos = pathinfo($image->getFilename());
 
