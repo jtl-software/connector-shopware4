@@ -15,7 +15,7 @@ use \jtl\Connector\Shopware\Utilities\Mmc;
 use \jtl\Connector\Model\Statistic;
 use \jtl\Connector\Model\Identity;
 use \jtl\Connector\Shopware\Utilities\IdConcatenator;
-use \jtl\Connector\Shopware\Utilities\Shop as ShopUtil;
+use jtl\Connector\Shopware\Utilities\Shop as ShopUtil;
 
 /**
  * Image Controller
@@ -63,7 +63,19 @@ class Image extends DataController
                         case ImageRelationType::TYPE_PRODUCT:
                             $model = Mmc::getModel('Image');
 
+                            $id = ImageModel::generateId(ImageRelationType::TYPE_PRODUCT, (int) $modelSW['cId'], (int) $modelSW['media_id']);
+                            $path = $modelSW['path'];
+                            $foreignKey = IdConcatenator::link(array($modelSW['detailId'], $modelSW['articleID']));
+
+                            $model->setId(new Identity($id));
+                            $model->setRelationType($relationType)
+                                ->setForeignKey(new Identity($foreignKey))
+                                ->setFilename(sprintf('%s://%s%s/%s', $proto, Shopware()->Shop()->getHost(), Shopware()->Shop()->getBasePath(), $path))
+                                ->setRemoteUrl(sprintf('%s://%s%s/%s', $proto, Shopware()->Shop()->getHost(), Shopware()->Shop()->getBasePath(), $path))
+                                ->setSort((int) $modelSW['position']);
+
                             // Parent
+                            /*
                             $id = ImageModel::generateId(ImageRelationType::TYPE_PRODUCT, $modelSW['id'], $modelSW['media']['id']);
                             $path = $modelSW['media']['path'];
 
@@ -82,12 +94,13 @@ class Image extends DataController
                                 ->setFilename(sprintf('%s://%s%s/%s', $proto, Shopware()->Shop()->getHost(), Shopware()->Shop()->getBasePath(), $path))
                                 ->setRemoteUrl(sprintf('%s://%s%s/%s', $proto, Shopware()->Shop()->getHost(), Shopware()->Shop()->getBasePath(), $path))
                                 ->setSort($modelSW['position']);
+                            */
 
                             $result[] = $model;
                             break;
                         case ImageRelationType::TYPE_CATEGORY:
                             $model = Mmc::getModel('Image');
-                            
+
                             $model->setId(new Identity(ImageModel::generateId(ImageRelationType::TYPE_CATEGORY, $modelSW['id'], $modelSW['mediaId'])));
 
                             $model->setRelationType($relationType)
@@ -101,7 +114,7 @@ class Image extends DataController
                             $model = Mmc::getModel('Image');
 
                             $model->setId(new Identity(ImageModel::generateId(ImageRelationType::TYPE_MANUFACTURER, $modelSW['id'], $modelSW['mediaId'])));
-                            
+
                             $model->setRelationType($relationType)
                                 ->setForeignKey(new Identity($modelSW['id']))
                                 ->setFilename(sprintf('%s://%s%s/%s', $proto, Shopware()->Shop()->getHost(), Shopware()->Shop()->getBasePath(), $modelSW['path']))
@@ -178,7 +191,7 @@ class Image extends DataController
             $err->setMessage($exc->getMessage());
             $action->setError($err);
         }
-        
+
         return $action;
     }
 }

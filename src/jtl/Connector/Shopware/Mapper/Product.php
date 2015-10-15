@@ -623,6 +623,12 @@ class Product extends DataMapper
             $this->Manager()->persist($attributeSW);
         }
 
+        // Reset
+        for ($i = 1; $i <= 20; $i++) {
+            $setter = "setAttr{$i}";
+            $attributeSW->{$setter}(null);
+        }
+
         $i = 2;
         foreach ($product->getAttributes() as $attribute) {
             if (!$attribute->getIsCustomProperty()) {
@@ -766,11 +772,14 @@ class Product extends DataMapper
             $optionMapper = Mmc::getMapper('ConfiguratorOption');
             $types = array();
             foreach ($product->getVariations() as $variation) {
-                if (!isset($types[$variation->getType()])) {
-                    $types[$variation->getType()] = 0;
-                }
 
-                $types[$variation->getType()]++;
+                if (strlen(trim($variation->getType())) > 0) {
+                    if (!isset($types[$variation->getType()])) {
+                        $types[$variation->getType()] = 0;
+                    }
+
+                    $types[$variation->getType()]++;
+                }
 
                 $variationName = null;
                 $variationValueName = null;
@@ -821,7 +830,8 @@ class Product extends DataMapper
 
             $confiSet->setOptions($options)
                 ->setGroups($groups)
-                ->setType($this->calcVariationType($types));
+                //->setType($this->calcVariationType($types));
+                ->setType(0);
 
             $this->Manager()->persist($confiSet);
 
@@ -831,6 +841,10 @@ class Product extends DataMapper
 
     protected function calcVariationType(array $types)
     {
+        if (count($types) == 0) {
+            return ProductVariation::TYPE_SELECT;
+        }
+
         arsort($types);
 
         $checkEven = function($vTypes) {
@@ -926,7 +940,7 @@ class Product extends DataMapper
             if ($i18n->getLanguageISO() !== LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
                 $shops = $shopMapper->findByLocale($locale->getLocale());
 
-                if ($shops !== null) {
+                if ($shops !== null && is_array($shops) && count($shops) > 0) {
                     $helper = ProductNameHelper::build($product, $i18n->getLanguageISO());
 
                     foreach ($shops as $shop) {
@@ -974,7 +988,7 @@ class Product extends DataMapper
 
                         $shops = $shopMapper->findByLocale($locale->getLocale());
 
-                        if ($shops !== null) {
+                        if ($shops !== null && is_array($shops) && count($shops) > 0) {
                             foreach ($shops as $shop) {
                                 $data = array();
                                 if (array_key_exists($shop->getId(), $cache)) {
@@ -1295,6 +1309,14 @@ class Product extends DataMapper
                     Shopware()->Db()->delete('s_articles_attributes', array('articledetailsID = ?' => $detailSW->getId()));
                     Shopware()->Db()->delete('s_articles_prices', array('articledetailsID = ?' => $detailSW->getId()));
                     Shopware()->Db()->delete('s_articles_details', array('id = ?' => $detailSW->getId()));
+                    Shopware()->Db()->query(
+                        'DELETE f, r
+                            FROM s_filter f
+                            LEFT JOIN s_filter_relations r ON r.groupID = f.id
+                            WHERE f.name = ?',
+                        array($detailSW->getNumber())
+                    );
+                    Shopware()->Db()->delete('s_filter_articles', array('articleID = ?' => $productSW->getId()));
 
                     $this->Manager()->remove($productSW);
                     $this->Manager()->flush($productSW);
