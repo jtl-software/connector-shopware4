@@ -131,12 +131,12 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                         $sql = '
                             INSERT IGNORE INTO jtl_connector_link_product_image
                             (
-                                id, host_id, image_id
+                                id, host_id, image_id, media_id
                             )
-                            VALUES (?,?,?)
+                            VALUES (?,?,?,?)
                         ';
 
-                        $statement = Shopware()->Db()->query($sql, array($foreignId, $hostId, $endpointId));
+                        $statement = Shopware()->Db()->query($sql, array($foreignId, $hostId, $endpointId, $mediaId));
                     } else {
                         $sql = '
                             INSERT IGNORE INTO ' . $dbInfo['table'] . '
@@ -146,7 +146,7 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                             VALUES (?,?,?)
                         ';
 
-                        $statement = Shopware()->Db()->query($sql, array($endpointId, $mediaId, $hostId));
+                        $statement = Shopware()->Db()->query($sql, [$endpointId, $mediaId, $hostId]);
                     }
                     break;
                 default:
