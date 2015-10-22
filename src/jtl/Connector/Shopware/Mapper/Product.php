@@ -652,7 +652,7 @@ class Product extends DataMapper
 
                         $setter = "setAttr{$i}";
 
-                        if (preg_match('/attr(20|1[1-9]{1}|[1-9]{1})/', $attributeI18n->getName(), $matches)) {
+                        if (preg_match('/attr(20|1[0-9]{1}|[1-9]{1})/', $attributeI18n->getName(), $matches)) {
                             if (strlen($matches[0]) == strlen($attributeI18n->getName())) {
                                 $number = str_replace('attr', '', $attributeI18n->getName());
                                 $s_setter = "setAttr{$number}";
@@ -792,12 +792,14 @@ class Product extends DataMapper
                 $groupSW = $groupMapper->findOneBy(array('name' => $variationName));
                 if ($groupSW === null) {
                     $groupSW = new \Shopware\Models\Article\Configurator\Group();
-                    $groupSW->setName($variationName);
-                    $groupSW->setDescription('');
-                    $groupSW->setPosition(0);
-
-                    $this->Manager()->persist($groupSW);
                 }
+
+                $groupSW->setName($variationName);
+                $groupSW->setDescription('');
+                //$groupSW->setPosition(0);
+                $groupSW->setPosition($variation->getSort());
+
+                $this->Manager()->persist($groupSW);
 
                 //$groups->add($groupSW);
                 $groups[] = $groupSW;
@@ -816,12 +818,14 @@ class Product extends DataMapper
 
                     if ($optionSW === null) {
                         $optionSW = new \Shopware\Models\Article\Configurator\Option();
-                        $optionSW->setName($variationValueName);
-                        $optionSW->setPosition(($i + 1));
-                        $optionSW->setGroup($groupSW);
-
-                        $this->Manager()->persist($optionSW);
                     }
+
+                    $optionSW->setName($variationValueName);
+                    //$optionSW->setPosition(($i + 1));
+                    $optionSW->setPosition($variationValue->getSort());
+                    $optionSW->setGroup($groupSW);
+
+                    $this->Manager()->persist($optionSW);
 
                     //$options->add($optionSW);
                     $options[] = $optionSW;
