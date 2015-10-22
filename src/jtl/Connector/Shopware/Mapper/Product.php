@@ -629,7 +629,7 @@ class Product extends DataMapper
             $attributeSW->{$setter}(null);
         }
 
-        $i = 2;
+        $i = 3;
         foreach ($product->getAttributes() as $attribute) {
             if (!$attribute->getIsCustomProperty()) {
                 $i++;
