@@ -146,7 +146,7 @@ class PrimaryKeyMapper implements IPrimaryKeyMapper
                             VALUES (?,?,?)
                         ';
 
-                        $statement = Shopware()->Db()->query($sql, [$endpointId, $mediaId, $hostId]);
+                        $statement = Shopware()->Db()->query($sql, array($endpointId, $mediaId, $hostId));
                     }
                     break;
                 default:
