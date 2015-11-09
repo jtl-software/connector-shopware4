@@ -1,6 +1,6 @@
 1.2.5 (unreleased)
 -----
-- Fixed product attribute type
+
 
 1.2.4
 -----
