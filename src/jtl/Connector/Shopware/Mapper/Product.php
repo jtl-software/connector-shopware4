@@ -659,8 +659,10 @@ class Product extends DataMapper
                                     $oldValue = $attributeSW->{$s_getter}();
                                     $attributeSW->{$s_setter}($attributeI18n->getValue());
 
-                                    if ($number != $i && method_exists($attributeSW, $setter)) {
+                                    if ($oldValue !== null && $number != $i && method_exists($attributeSW, $setter)) {
                                         $attributeSW->{$setter}($oldValue);
+                                    } elseif ($number < $i && $i > 4) {
+                                        $i--;
                                     }
 
                                     continue;
