@@ -183,6 +183,7 @@ class Product extends DataMapper
         $detailSW = null;
         //$result = new ProductModel();
         $result = $product;
+        $attrMappings = [];
 
         /*
         Logger::write(sprintf('>>> Product with id (%s, %s), masterProductId (%s, %s), manufacturerId (%s, %s)',
@@ -203,7 +204,7 @@ class Product extends DataMapper
 
                 $this->prepareChildAssociatedData($product, $productSW, $detailSW);
                 $this->prepareDetailAssociatedData($product, $productSW, $detailSW, true);
-                $this->prepareAttributeAssociatedData($product, $productSW, $detailSW, true);
+                $this->prepareAttributeAssociatedData($product, $productSW, $detailSW, $attrMappings, true);
                 $this->preparePriceAssociatedData($product, $productSW, $detailSW);
                 $this->prepareUnitAssociatedData($product, $detailSW);
                 $this->prepareMeasurementUnitAssociatedData($product, $detailSW);
@@ -231,7 +232,7 @@ class Product extends DataMapper
                 $this->prepareDetailAssociatedData($product, $productSW, $detailSW);
                 $this->prepareVariationAssociatedData($product, $productSW);
                 $this->prepareSpecificAssociatedData($product, $productSW, $detailSW);
-                $this->prepareAttributeAssociatedData($product, $productSW, $detailSW);
+                $this->prepareAttributeAssociatedData($product, $productSW, $detailSW, $attrMappings);
                 $this->preparePriceAssociatedData($product, $productSW, $detailSW);
                 $this->prepareUnitAssociatedData($product, $detailSW);
                 $this->prepareMeasurementUnitAssociatedData($product, $detailSW);
@@ -256,7 +257,7 @@ class Product extends DataMapper
                 $this->prepareSetVariationRelations($product, $productSW);
                 $this->saveVariationTranslationData($product, $productSW);
                 $this->deleteTranslationData($productSW);
-                $this->saveTranslationData($product, $productSW);
+                $this->saveTranslationData($product, $productSW, $attrMappings);
             }
         } catch (\Exception $e) {
             Logger::write(sprintf('Exception from Product (%s, %s)', $product->getId()->getEndpoint(), $product->getId()->getHost()), Logger::ERROR, 'database');
@@ -607,7 +608,7 @@ class Product extends DataMapper
         }
     }
 
-    protected function prepareAttributeAssociatedData(ProductModel $product, ArticleSW &$productSW, DetailSW &$detailSW, $isChild = false)
+    protected function prepareAttributeAssociatedData(ProductModel $product, ArticleSW &$productSW, DetailSW &$detailSW, array &$attrMappings, $isChild = false)
     {
         // Attribute
         $attributeSW = $detailSW->getAttribute();
@@ -626,6 +627,7 @@ class Product extends DataMapper
         }
 
         $i = 3;
+        $attrMappings = [];
         foreach ($product->getAttributes() as $attribute) {
             if (!$attribute->getIsCustomProperty()) {
                 $i++;
@@ -659,9 +661,15 @@ class Product extends DataMapper
                                     $oldValue = $attributeSW->{$s_getter}();
                                     $attributeSW->{$s_setter}($attributeI18n->getValue());
 
-                                    if ($number != $i && method_exists($attributeSW, $setter)) {
+                                    if ($oldValue !== null && $number != $i && method_exists($attributeSW, $setter)) {
                                         $attributeSW->{$setter}($oldValue);
+                                        $hostId = $attrMappings[$number];
+                                        $attrMappings[$i] = $hostId;
+                                    } elseif ($number < $i && $i > 4) {
+                                        $i--;
                                     }
+
+                                    $attrMappings[$number] = $attribute->getId()->getHost();
 
                                     continue;
                                 }
@@ -670,6 +678,7 @@ class Product extends DataMapper
 
                         if (method_exists($attributeSW, $setter)) {
                             $attributeSW->{$setter}($attributeI18n->getValue());
+                            $attrMappings[$i] = $attribute->getId()->getHost();
                         }
                     }
                 }
@@ -781,36 +790,12 @@ class Product extends DataMapper
 
             $confiSet->setOptions($options)
                 ->setGroups($groups)
-                //->setType($this->calcVariationType($types));
                 ->setType(0);
 
             $this->Manager()->persist($confiSet);
 
             $productSW->setConfiguratorSet($confiSet);
         }
-    }
-
-    protected function calcVariationType(array $types)
-    {
-        if (count($types) == 0) {
-            return ProductVariation::TYPE_SELECT;
-        }
-
-        arsort($types);
-
-        $checkEven = function($vTypes) {
-            if (count($vTypes) > 1) {
-                $arr = array_values($vTypes);
-                return ($arr[0] == $arr[1]);
-            }
-
-            return false;
-        };
-
-        reset($types);
-        $key = $checkEven($types) ? ProductVariation::TYPE_SELECT : key($types);
-
-        return VariationType::map($key);
     }
 
     protected function preparePriceAssociatedData(ProductModel $product, ArticleSW &$productSW, DetailSW &$detailSW)
@@ -873,10 +858,28 @@ class Product extends DataMapper
         $productSW->setPropertyGroup($group);
     }
 
-    protected function saveTranslationData(ProductModel $product, ArticleSW $productSW)
+    protected function saveTranslationData(ProductModel $product, ArticleSW $productSW, array $attrMappings)
     {
-        // ProductI18n
         $shopMapper = Mmc::getMapper('Shop');
+
+        // AttributeI18n
+        $attrI18ns = [];
+        foreach ($product->getAttributes() as $attr) {
+            foreach ($attr->getI18ns() as $attrI18n) {
+                if ($attrI18n->getLanguageISO() !== LanguageUtil::map(Shopware()->Shop()->getLocale()->getLocale())) {
+                    if (!isset($attrI18ns[$attrI18n->getLanguageISO()])) {
+                        $attrI18ns[$attrI18n->getLanguageISO()] = [];
+                    }
+
+                    if (($index = array_search($attr->getId()->getHost(), $attrMappings)) !== false) {
+                        $i = "attr{$index}";
+                        $attrI18ns[$attrI18n->getLanguageISO()][$i] = $attrI18n->getValue();
+                    }
+                }
+            }
+        }
+
+        // ProductI18n
         $translationUtil = new TranslationUtil();
         $cache = array();
         foreach ($product->getI18ns() as $i18n) {
@@ -901,11 +904,12 @@ class Product extends DataMapper
                             'metaTitle' => $i18n->getTitleTag(),
                             'description' => $i18n->getMetaDescription(),
                             'keywords' => $i18n->getMetaKeywords(),
-                            'packUnit' => '',
-                            'attr1' => '',
-                            'attr2' => '',
-                            'attr3' => ''
+                            'packUnit' => ''
                         );
+
+                        if (isset($attrI18ns[$i18n->getLanguageISO()])) {
+                            $cache[$shop->getId()] = array_merge($cache[$shop->getId()], $attrI18ns[$i18n->getLanguageISO()]);
+                        }
 
                         $translationUtil->write(
                             $shop->getId(),
