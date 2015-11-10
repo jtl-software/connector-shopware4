@@ -1,6 +1,6 @@
 1.2.5 (unreleased)
 -----
-
+- Added product attribute multilanguage support
 
 1.2.4
 -----
