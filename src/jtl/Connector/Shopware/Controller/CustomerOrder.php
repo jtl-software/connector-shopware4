@@ -9,6 +9,7 @@ namespace jtl\Connector\Shopware\Controller;
 use jtl\Connector\Core\Utilities\Money;
 use jtl\Connector\Formatter\ExceptionFormatter;
 use jtl\Connector\Model\Identity;
+use jtl\Connector\Payment\PaymentTypes;
 use jtl\Connector\Result\Action;
 use jtl\Connector\Shopware\Utilities\Locale as LocaleUtil;
 use jtl\Connector\Shopware\Utilities\Mmc;
