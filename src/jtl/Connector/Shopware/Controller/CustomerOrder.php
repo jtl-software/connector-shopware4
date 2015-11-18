@@ -59,6 +59,18 @@ class CustomerOrder extends DataController
                     $paymentModuleCode = ($code !== null) ? $code : $orderSW['payment']['name'];
                     $order->setPaymentModuleCode($paymentModuleCode);
 
+                    // Billsafe
+                    if ($paymentModuleCode === PaymentTypes::TYPE_BILLSAFE
+                        && isset($orderSW['attribute']['swagBillsafeIban'])
+                        && isset($orderSW['attribute']['swagBillsafeBic'])) {
+                        $order->setPui(sprintf(
+                            'Bitte bezahlen Sie %s %s an folgendes Konto: %s',
+                            $orderSW['invoiceAmount'],
+                            $order->getCurrencyIso(),
+                            sprintf('IBAN: %s, BIC: %s', $orderSW['attribute']['swagBillsafeIban'], $orderSW['attribute']['swagBillsafeBic'])
+                        ));
+                    }
+
                     // CustomerOrderStatus
                     $customerOrderStatus = StatusUtil::map(null, $orderSW['status']);
                     if ($customerOrderStatus !== null) {
