@@ -1,6 +1,7 @@
 1.3.1 (unreleased)
 -----
 - Added customer payment sepa support
+- Changed payment pull error tolerance
 
 1.3.0
 -----
