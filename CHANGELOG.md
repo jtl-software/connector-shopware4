@@ -2,6 +2,7 @@
 -----
 - Added customer payment sepa support
 - Added product delivery time manuell and fixed value
+- Added customer additional text and birthday
 - Fixed customer order shipping and billing additional text handling
 - Changed payment pull error tolerance
 
