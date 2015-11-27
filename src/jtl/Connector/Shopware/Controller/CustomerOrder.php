@@ -128,7 +128,8 @@ class CustomerOrder extends DataController
                     // Street and Salutation
                     if ($order->getBillingAddress() !== null) {
                         $order->getBillingAddress()->setStreet(sprintf('%s %s', $orderSW['billing']['street'], $orderSW['billing']['streetNumber']))
-                            ->setSalutation(Salutation::toConnector($orderSW['billing']['salutation']));
+                            ->setSalutation(Salutation::toConnector($orderSW['billing']['salutation']))
+                            ->setEmail($orderSW['customer']['email']);
                     }
 
                     if ($order->getShippingAddress() !== null) {
@@ -153,7 +154,8 @@ class CustomerOrder extends DataController
 
                         $order->getShippingAddress()->setStreet($street)
                             ->setExtraAddressLine($extraAddressLine)
-                            ->setSalutation(Salutation::toConnector($orderSW['shipping']['salutation']));
+                            ->setSalutation(Salutation::toConnector($orderSW['shipping']['salutation']))
+                            ->setEmail($orderSW['customer']['email']);
                     }
 
                     // Adding shipping item
