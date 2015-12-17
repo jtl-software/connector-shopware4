@@ -1,6 +1,7 @@
 1.4.0
 -----
 - Added billsafe btn tansaction number
+- Added product first import unit name
 
 1.3.2
 -----
@@ -19,7 +20,7 @@
 1.3.0
 -----
 - Added connector install, phar and suhosin check
-- Added category language locale check
+- Added category language locale check#
 - Added billsafe to payment types
 - Added billsafe customer order support
 - Added file and mysql validation files
