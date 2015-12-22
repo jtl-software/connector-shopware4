@@ -801,12 +801,35 @@ class Product extends DataMapper
 
             $confiSet->setOptions($options)
                 ->setGroups($groups)
-                ->setType(0);
+                ->setType($this->calcVariationType($types));
 
             $this->Manager()->persist($confiSet);
 
             $productSW->setConfiguratorSet($confiSet);
         }
+    }
+
+    protected function calcVariationType(array $types)
+    {
+        if (count($types) == 0) {
+            return ProductVariation::TYPE_RADIO;
+        }
+
+        arsort($types);
+
+        $checkEven = function($vTypes) {
+            if (count($vTypes) > 1) {
+                $arr = array_values($vTypes);
+                return ($arr[0] == $arr[1]);
+            }
+
+            return false;
+        };
+
+        reset($types);
+        $key = $checkEven($types) ? ProductVariation::TYPE_RADIO : key($types);
+
+        return VariationType::map($key);
     }
 
     protected function preparePriceAssociatedData(ProductModel $product, ArticleSW &$productSW, DetailSW &$detailSW)
