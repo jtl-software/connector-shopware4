@@ -1,3 +1,7 @@
+1.3.3 (unreleased)
+-----
+- Fixed type hints in customer mapper
+
 1.3.2
 -----
 - Fixed customer order missing or nulled birthday
