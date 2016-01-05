@@ -4,6 +4,7 @@
 - Added product first import unit name
 - Added product variation set default (standard) type
 - Fixed wrong customer type hint in customer mapper class
+- Fixed missing crossselling linking
 
 1.3.2
 -----
