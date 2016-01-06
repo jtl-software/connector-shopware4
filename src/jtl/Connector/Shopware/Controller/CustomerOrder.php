@@ -65,10 +65,11 @@ class CustomerOrder extends DataController
                         && isset($orderSW['attribute']['swagBillsafeIban'])
                         && isset($orderSW['attribute']['swagBillsafeBic'])) {
                         $order->setPui(sprintf(
-                            'Bitte bezahlen Sie %s %s an folgendes Konto: %s',
+                            'Bitte bezahlen Sie %s %s an folgendes Konto: %s Verwendungszweck: BTN %s',
                             $orderSW['invoiceAmount'],
                             $order->getCurrencyIso(),
-                            sprintf('IBAN: %s, BIC: %s', $orderSW['attribute']['swagBillsafeIban'], $orderSW['attribute']['swagBillsafeBic'])
+                            sprintf('IBAN: %s, BIC: %s', $orderSW['attribute']['swagBillsafeIban'], $orderSW['attribute']['swagBillsafeBic']),
+                            $orderSW['transactionId']
                         ));
                     }
 
