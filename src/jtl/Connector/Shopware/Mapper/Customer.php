@@ -20,12 +20,12 @@ class Customer extends DataMapper
 {
     public function find($id)
     {
-        return $this->Manager()->find('Shopware\Models\Customer\Customer', $id);
+        return (intval($id) == 0) ? null : $this->Manager()->find('Shopware\Models\Customer\Customer', $id);
     }
 
     public function findDebit($id)
     {
-        return $this->Manager()->find('Shopware\Models\Customer\Debit', $id);
+        return (intval($id) == 0) ? null : $this->Manager()->find('Shopware\Models\Customer\Debit', $id);
     }
 
     public function findDebitByUser($userId)

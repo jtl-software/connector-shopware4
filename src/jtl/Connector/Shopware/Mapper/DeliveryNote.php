@@ -16,7 +16,7 @@ class DeliveryNote extends DataMapper
 {
     public function find($id)
     {
-        return $this->Manager()->getRepository('Shopware\Models\Order\Document\Document')->find($id);
+        return (intval($id) == 0) ? null : $this->Manager()->getRepository('Shopware\Models\Order\Document\Document')->find($id);
     }
 
     public function findType($name)
