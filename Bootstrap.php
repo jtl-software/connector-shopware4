@@ -195,6 +195,17 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
                 $this->fillCrossSellingGroupTable();
             case '1.4.0':
             case '1.4.1':
+            case '1.4.2':
+            $this->createCrossSellingGroupTable();
+            $related = jtl\Connector\Shopware\Model\CrossSellingGroup::RELATED;
+            $similar = jtl\Connector\Shopware\Model\CrossSellingGroup::SIMILAR;
+            $relatedGroupId = Shopware()->Db()->fetchOne('SELECT group_id FROM jtl_connector_crosssellinggroup_i18n WHERE name = ?',[$related]);
+            $similarGroupId = Shopware()->Db()->fetchOne('SELECT group_id FROM jtl_connector_crosssellinggroup_i18n WHERE name = ?',[$similar]);
+
+            if ($relatedGroupId === null && $similarGroupId === null) {
+                $this->fillCrossSellingGroupTable();
+            }
+            break;
                 break;
             default:
                 return false;
