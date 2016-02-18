@@ -27,8 +27,7 @@
     "minimum-stability" : "dev",
     "autoload": {
         "psr-0": {
-            "jtl\\Connector\\Shopware\\": "src/",
-            "": "plugins/"
+            "jtl\\Connector\\Shopware\\": "src/"
         }
     }
 }
