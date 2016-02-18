@@ -46,8 +46,6 @@
             <fileset dir=".">
                 <include name="src/" />
                 <include name="vendor/" />
-				<include name="logs/" />
-				<include name="db/" />
             </fileset>
         </copy>
     </target>
