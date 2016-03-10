@@ -11,6 +11,7 @@ use jtl\Connector\Formatter\ExceptionFormatter;
 use jtl\Connector\Model\Identity;
 use jtl\Connector\Payment\PaymentTypes;
 use jtl\Connector\Result\Action;
+use jtl\Connector\Shopware\Utilities\IdConcatenator;
 use jtl\Connector\Shopware\Utilities\Locale as LocaleUtil;
 use jtl\Connector\Shopware\Utilities\Mmc;
 use jtl\Connector\Shopware\Utilities\Payment as PaymentUtil;
@@ -112,7 +113,7 @@ class CustomerOrder extends DataController
                         $detail = $productMapper->findDetailBy(array('number' => $detailSW['articleNumber']));
                         if ($detail !== null) {
                             //throw new \Exception(sprintf('Cannot find detail with number (%s)', $detailSW['articleNumber']));
-                            $orderItem->setProductId(new Identity(sprintf('%s_%s', $detail->getId(), $detailSW['articleId'])));
+                            $orderItem->setProductId(new Identity(IdConcatenator::link([$detail->getId(), $detailSW['articleId']])));
                         }
 
                         /*
