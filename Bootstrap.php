@@ -27,7 +27,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
  
     public function getVersion()
     {
-        return '1.4.6';
+        return '1.4.7';
     }
  
     public function getInfo()
@@ -199,8 +199,8 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
                 $this->createCrossSellingGroupTable();
                 $related = jtl\Connector\Shopware\Model\CrossSellingGroup::RELATED;
                 $similar = jtl\Connector\Shopware\Model\CrossSellingGroup::SIMILAR;
-                $relatedGroupId = Shopware()->Db()->fetchOne('SELECT group_id FROM jtl_connector_crosssellinggroup_i18n WHERE name = ?',[$related]);
-                $similarGroupId = Shopware()->Db()->fetchOne('SELECT group_id FROM jtl_connector_crosssellinggroup_i18n WHERE name = ?',[$similar]);
+                $relatedGroupId = Shopware()->Db()->fetchOne('SELECT group_id FROM jtl_connector_crosssellinggroup_i18n WHERE name = ?', array($related));
+                $similarGroupId = Shopware()->Db()->fetchOne('SELECT group_id FROM jtl_connector_crosssellinggroup_i18n WHERE name = ?', array($similar));
 
                 if ($relatedGroupId === null && $similarGroupId === null) {
                     $this->fillCrossSellingGroupTable();
@@ -209,6 +209,7 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
             case '1.4.4':
                 $this->createPaymentTrigger();
             case '1.4.5':
+            case '1.4.6':
                 break;
             default:
                 return false;
@@ -533,27 +534,27 @@ class Shopware_Plugins_Frontend_jtlconnector_Bootstrap extends Shopware_Componen
 
     private function fillCrossSellingGroupTable()
     {
-        Shopware()->Db()->insert('jtl_connector_crosssellinggroup', [
+        Shopware()->Db()->insert('jtl_connector_crosssellinggroup', array(
             'host_id' => 0
-        ]);
+        ));
 
-        Shopware()->Db()->insert('jtl_connector_crosssellinggroup_i18n', [
+        Shopware()->Db()->insert('jtl_connector_crosssellinggroup_i18n', array(
             'group_id' => Shopware()->Db()->lastInsertId(),
             'languageISO' => 'ger',
             'name' => jtl\Connector\Shopware\Model\CrossSellingGroup::RELATED,
             'description' => 'Zubehör Artikel'
-        ]);
+        ));
 
-        Shopware()->Db()->insert('jtl_connector_crosssellinggroup', [
+        Shopware()->Db()->insert('jtl_connector_crosssellinggroup', array(
             'host_id' => 0
-        ]);
+        ));
 
-        Shopware()->Db()->insert('jtl_connector_crosssellinggroup_i18n', [
+        Shopware()->Db()->insert('jtl_connector_crosssellinggroup_i18n', array(
             'group_id' => Shopware()->Db()->lastInsertId(),
             'languageISO' => 'ger',
             'name' => jtl\Connector\Shopware\Model\CrossSellingGroup::SIMILAR,
             'description' => 'Ähnliche Artikel'
-        ]);
+        ));
     }
 
     private function createUnitTable()
